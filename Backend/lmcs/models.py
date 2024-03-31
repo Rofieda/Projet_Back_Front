@@ -118,8 +118,8 @@ class Publication(models.Model):
     nombre_page = models.CharField(max_length=50)
     rang_chercheur = models.IntegerField()
 
-    class Meta:
-        unique_together = ('id_chercheur', 'Conf_Journal_id')
+    #class Meta:
+        #unique_together = ('id_chercheur', 'Conf_Journal_id')
         #db_table = 'publications'
 #class Chercheurs_Projets(models.Model):
 #    id_chercheurs_projets=models.AutoField(primary_key=True)

@@ -65,9 +65,10 @@ class ConfJournalDetailAPIview(generics.RetrieveAPIView):# for show details for 
 class ConfJournalCreatAPIview(generics.CreateAPIView):
     queryset = Conf_journal.objects.all()
     serializer_class = ConfJournalCreat
+    permission_classes = [IsAuthenticated]
 
 
-class PublicationCreateAPIView(APIView):
+class PublicationCreateAPIView1234567(APIView):
     def post(self, request):
         # Assuming the request contains data for the new publication
         data = request.data
@@ -80,16 +81,19 @@ class PublicationCreateAPIView(APIView):
         lien_publie = data.get('lien_publie')
         nombre_page = data.get('nombre_page')
         rang_chercheur = data.get('rang_chercheur')
-        chercheur_id = data.get('chercheur_id')  # Manually provided Chercheur ID
+        #get the connected chercheur id 
+        chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
 
         try:
             # Retrieve Chercheur using provided Chercheur ID
             chercheur = Chercheur.objects.get(id_chercheur=chercheur_id)
         except Chercheur.DoesNotExist:
-            return Response({"error": "Chercheur with provided ID does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Chercheur does not exist."}, status=status.HTTP_400_BAD_REQUEST)
         
         # Retrieve Conf_journal using provided acronym
         acronym = data.get('conf_journal_acronym')
+        conf_journ=data.get('conf_journ')
+        type=data.get('type')
         conf_journal = Conf_journal.objects.filter(acronyme=acronym).first()
         if not conf_journal:
             return Response({"error": "Conf_journal with provided acronym not found."}, status=status.HTTP_400_BAD_REQUEST)
@@ -117,10 +121,78 @@ class PublicationCreateAPIView(APIView):
     
 
 
+#_______________________________________________________________________________________________
+class PublicationCreateAPIView(APIView):
+    def post(self, request):
+        data = request.data
+
+        # Extract data for the new publication
+        annee = data.get('annee')
+        titre_publication = data.get('titre_publication')
+        volume = data.get('volume')
+        citations = data.get('citations')
+        lien_publie = data.get('lien_publie')
+        nombre_page = data.get('nombre_page')
+        rang_chercheur = data.get('rang_chercheur')
+        
+        # Get the connected chercheur id 
+        chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
+
+        try:
+            # Retrieve Chercheur using provided Chercheur ID
+            chercheur = Chercheur.objects.get(id_chercheur=chercheur_id)
+        except Chercheur.DoesNotExist:
+            return Response({"error": "Chercheur does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Retrieve Conf_journal using provided acronym
+        acronym = data.get('conf_journal_acronym')
+        conf_journ = data.get('conf_journ')
+        type = data.get('type')
+        conf_journal = Conf_journal.objects.filter(acronyme=acronym).first()
+        if not conf_journal:
+            return Response({"error": "Conf_journal with provided acronym not found."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if a publication with the same chercheur_id, conf_journal, and titre_publication exists
+        existing_publication = Publication.objects.filter(
+            id_chercheur=chercheur,
+            Conf_Journal_id=conf_journal,
+            titre_publication=titre_publication
+        ).exists()
+
+        if existing_publication:
+            return Response({"error": "Publication with the same chercheur, conf_journal, and titre_publication already exists."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create the publication with annee value assigned
+        publication = Publication(
+            id_chercheur=chercheur,
+            Conf_Journal_id=conf_journal,  
+            annee=annee,
+            titre_publication=titre_publication,
+            volume=volume,
+            citations=citations,
+            lien_publie=lien_publie,
+            nombre_page=nombre_page,
+            rang_chercheur=rang_chercheur
+        )
+        
+        # Save the publication
+        publication.save()
+
+        # Serialize the created publication
+        serializer = PublicationSerializer(publication)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+
+
 
 class EncadrementCreatAPIview(generics.CreateAPIView):
     queryset = Encadrement.objects.all()
     serializer_class = EncadrementCreatSerializer
+    permission_classes = [IsAuthenticated]
+
 
     def create(self, request, *args, **kwargs):
         data = request.data
@@ -134,11 +206,12 @@ class EncadrementCreatAPIview(generics.CreateAPIView):
             'nom_prenom_etd1': data.get('nom_prenom_etd1'),
             'nom_prenom_etd2': data.get('nom_prenom_etd2'),
         }
-        chercheur_id = data.get('chercheur_id')
+        chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
 
         # Vérifier si un encadrement avec le même intitulé existe déjà
         existing_encadrement = Encadrement.objects.filter(intitule=encadrement_data['intitule']).first()
-
+        chercheur1=data.get('chercheur1')
+        chercheur2=data.get('chercheur2')
         if existing_encadrement:
             # Si l'encadrement existe déjà, établir la relation entre ce encadrement et le chercheur
             with connection.cursor() as cursor:
@@ -160,9 +233,26 @@ class EncadrementCreatAPIview(generics.CreateAPIView):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class ProjetCreateAPIView(generics.CreateAPIView):
     queryset = Projet.objects.all()
     serializer_class = ProjetCreatSerializer
+    permission_classes = [IsAuthenticated]
+
 
     def create(self, request, *args, **kwargs):
         # Assuming the request contains data for the new projet
@@ -178,13 +268,14 @@ class ProjetCreateAPIView(generics.CreateAPIView):
         }
 
         # Manually provided Chercheur ID
-        chercheur_id = data.get('chercheur_id')
+        chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
 
-        try:
+
+        #try:
             # Retrieve Chercheur using provided Chercheur ID
-            chercheur = Chercheur.objects.get(id_chercheur=chercheur_id)
-        except Chercheur.DoesNotExist:
-            return Response({"error": "Chercheur with provided ID does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+         #   chercheur = Chercheur.objects.get(id_chercheur=chercheur_id)
+        #except Chercheur.DoesNotExist:
+         #   return Response({"error": "Chercheur with provided ID does not exist."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Check if Projet with the same title exist in the projet table 
         existing_projet = Projet.objects.filter(titre_projet=projet_data['titre_projet']).first()
@@ -202,7 +293,7 @@ class ProjetCreateAPIView(generics.CreateAPIView):
 
             # Establish the relationship with the chercheur
             with connection.cursor() as cursor:
-                cursor.execute("INSERT INTO lmcs_checheursprojets (id_chercheur, id_projet) VALUES (%s, %s)", [chercheur_id, projet.id_projet])
+                cursor.execute("INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)", [chercheur_id, projet.id_projet])
 
         # Serialize the created Projet
         serializer = self.get_serializer(projet)
@@ -212,30 +303,16 @@ class ProjetCreateAPIView(generics.CreateAPIView):
 
 
 
-#chercheur id manually
-class PublicationByChercheurAPIView12(generics.ListAPIView):
-    serializer_class = PublicationSerializerByChercheur
 
-    def get_queryset(self):
-        chercheur_id = self.request.query_params.get('chercheur_id')
-        if chercheur_id:
-            return Publication.objects.filter(id_chercheur=chercheur_id)
-        else:
-            return Publication.objects.none()
-        
-class PublicationModifyAPIView(generics.UpdateAPIView):
-    queryset = Publication.objects.all()
-    serializer_class = PublicationSerializer
 
-class PublicationDeleteAPIView(generics.DestroyAPIView):
-    queryset = Publication.objects.all()
-    serializer_class = PublicationSerializer
 
 class ProjetByChercheurAPIView(generics.ListAPIView):
     serializer_class = ProjetSerializerByChercheur
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        chercheur_id = self.request.query_params.get('chercheur_id')
+        # Get the chercheur_id from the authenticated user
+        chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
         if chercheur_id:
             # Step 1: Retrieve all project IDs associated with the chercheur
             projet_ids = ChecheursProjets.objects.filter(id_chercheur=chercheur_id).values_list('id_projet', flat=True)
@@ -248,7 +325,7 @@ class ProjetByChercheurAPIView(generics.ListAPIView):
 #chercheur id using authentification 
 class PublicationByChercheurAPIView(generics.ListAPIView):
     serializer_class = PublicationSerializerByChercheur
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
+   
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
@@ -262,13 +339,11 @@ class PublicationByChercheurAPIView(generics.ListAPIView):
 class PublicationModifyAPIView(generics.UpdateAPIView):
     queryset = Publication.objects.all()
     serializer_class = PublicationSerializer
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
 class PublicationDeleteAPIView(generics.DestroyAPIView):
     queryset = Publication.objects.all()
     serializer_class = PublicationSerializer
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
 
@@ -279,17 +354,20 @@ class PublicationDeleteAPIView(generics.DestroyAPIView):
 class ProjetModifyAPIView(generics.UpdateAPIView):
     queryset = Projet.objects.all()
     serializer_class = ProjetSerializerByChercheur
+    permission_classes = [IsAuthenticated]
 
 class ProjetDeleteAPIView(generics.DestroyAPIView):
     queryset = Projet.objects.all()
     serializer_class = ProjetSerializerByChercheur
+    permission_classes = [IsAuthenticated]
 
 
 class EncadrementByChercheurAPIView(generics.ListAPIView):
     serializer_class = EncadrementSerializerByChercheur
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        chercheur_id = self.request.query_params.get('chercheur_id')
+        chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
         if chercheur_id:
             # Step 1: Retrieve all project IDs associated with the chercheur
             encadrements_ids = ChecheursEncadrements.objects.filter(chercheur_id=chercheur_id).values_list('encadrement_id', flat=True)
@@ -302,7 +380,9 @@ class EncadrementByChercheurAPIView(generics.ListAPIView):
 class EncadrementModifyAPIView(generics.UpdateAPIView):
     queryset = Encadrement.objects.all()
     serializer_class = EncadrementSerializerByChercheur
+    permission_classes = [IsAuthenticated]
 
 class EncadrementDeleteAPIView(generics.DestroyAPIView):
     queryset = Encadrement.objects.all()
     serializer_class = EncadrementSerializerByChercheur
+    permission_classes = [IsAuthenticated]

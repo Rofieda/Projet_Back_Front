@@ -92,20 +92,39 @@ class ConfJournalCreat(serializers.ModelSerializer):
 
 
 class PublicationSerializer(serializers.ModelSerializer):
+    conf_journal_acronyme = serializers.SerializerMethodField()
+    conf_journal_name = serializers.SerializerMethodField()
+    chercheur=serializers.SerializerMethodField()
     class Meta : 
         model = Publication
-        fields ='__all__'
+        fields =['annee', 'titre_publication', 'volume','lien_publie','citations', 'chercheur','nombre_page', 'rang_chercheur']
+
+    def get_chercheur(self, obj):
+            chercheur = obj.id_chercheur 
+            return f"{chercheur.nom_chercheur} {chercheur.prenom_chercheur}" if chercheur else ''
+    
+    def get_conf_journal_acronyme(self, obj):
+        conf_journal = obj.Conf_Journal_id
+        return conf_journal.acronyme if conf_journal else ''
+
+    def get_conf_journal_name(self, obj):
+        conf_journal = obj.Conf_Journal_id
+        return conf_journal.nom if conf_journal else ''
 
 
 
+
+#_____________________________________________________________________________
 
 class PublicationSerializerByChercheur(serializers.ModelSerializer):
     modify_url = serializers.SerializerMethodField()
     delete_url = serializers.SerializerMethodField()
+    conf_journal_acronyme = serializers.SerializerMethodField()
+    conf_journal_type = serializers.SerializerMethodField()
 
     class Meta:
         model = Publication
-        fields = ['annee', 'titre_publication', 'volume', 'citations', 'modify_url', 'delete_url']
+        fields = ['titre_publication', 'conf_journal_type', 'annee','conf_journal_acronyme', 'citations','modify_url', 'delete_url']
 
     def get_modify_url(self, obj):
         return reverse('publication_modify', kwargs={'pk': obj.pk})
@@ -113,6 +132,13 @@ class PublicationSerializerByChercheur(serializers.ModelSerializer):
     def get_delete_url(self, obj):
         return reverse('publication_delete', kwargs={'pk': obj.pk})
     
+    def get_conf_journal_acronyme(self, obj):
+        conf_journal = obj.Conf_Journal_id
+        return conf_journal.acronyme if conf_journal else ''
+
+    def get_conf_journal_type(self, obj):
+        conf_journal = obj.Conf_Journal_id
+        return conf_journal.p_type if conf_journal else ''
 
 
 class ProjetSerializerByChercheur(serializers.ModelSerializer):
@@ -137,7 +163,7 @@ class EncadrementSerializerByChercheur(serializers.ModelSerializer):
 
     class Meta:
         model = Encadrement
-        fields = ['type_encadrement', 'intitule', 'role_chercheur', 'role_chercheur2', 'annee_fin', 'modify_url', 'delete_url']
+        fields = ['intitule', 'type_encadrement', 'annee_debut', 'annee_fin', 'modify_url', 'delete_url']
 
     def get_modify_url(self, obj):
         return reverse('encadrement_modify', kwargs={'pk': obj.pk})
