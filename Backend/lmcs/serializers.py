@@ -92,25 +92,12 @@ class ConfJournalCreat(serializers.ModelSerializer):
 
 
 class PublicationSerializer(serializers.ModelSerializer):
-    conf_journal_acronyme = serializers.SerializerMethodField()
-    conf_journal_name = serializers.SerializerMethodField()
-    chercheur=serializers.SerializerMethodField()
     class Meta : 
         model = Publication
-        fields =['annee', 'titre_publication', 'volume','lien_publie','citations', 'chercheur','nombre_page', 'rang_chercheur']
+        fields =['annee', 'titre_publication', 'volume','lien_publie','nombre_page', 'rang_chercheur']
 
-    def get_chercheur(self, obj):
-            chercheur = obj.id_chercheur 
-            return f"{chercheur.nom_chercheur} {chercheur.prenom_chercheur}" if chercheur else ''
+
     
-    def get_conf_journal_acronyme(self, obj):
-        conf_journal = obj.Conf_Journal_id
-        return conf_journal.acronyme if conf_journal else ''
-
-    def get_conf_journal_name(self, obj):
-        conf_journal = obj.Conf_Journal_id
-        return conf_journal.nom if conf_journal else ''
-
 
 
 
@@ -170,3 +157,9 @@ class EncadrementSerializerByChercheur(serializers.ModelSerializer):
 
     def get_delete_url(self, obj):
         return reverse('encadrement_delete', kwargs={'pk': obj.pk})
+    
+
+class Conf_JournSerializerByChercheur(serializers.ModelSerializer):
+    class Meta:
+        model =Conf_journal
+        exclude = ['Conf_Journal_id']

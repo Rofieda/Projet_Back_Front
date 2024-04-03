@@ -24,6 +24,10 @@ urlpatterns =[
     path('publications/<int:pk>/modify/', views.PublicationModifyAPIView.as_view(), name='publication_modify'),
     path('publications/<int:pk>/delete/', views.PublicationDeleteAPIView.as_view(), name='publication_delete'),
 
+
+    path('modifierconf_journ/<int:pk>',views.ConfjournModify.as_view(),name='Conf_Journ_Modify'), 
+
+
     path('projetByChercheur/', views.ProjetByChercheurAPIView.as_view(), name='projet_by_chercheur'),
     path('projet/<int:pk>/modify/', views.ProjetModifyAPIView.as_view(), name='projet_modify'),
     path('projet/<int:pk>/delete/', views.ProjetDeleteAPIView.as_view(), name='projet_delete'),
