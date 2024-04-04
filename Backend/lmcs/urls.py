@@ -36,6 +36,11 @@ urlpatterns =[
     path('encadrementByChercheur/', views.EncadrementByChercheurAPIView.as_view(), name='encadrement_by_chercheur'),
     path('encadrement/<int:pk>/modify/', views.EncadrementModifyAPIView.as_view(), name='encadrement_modify'),
     path('encadrement/<int:pk>/delete/', views.EncadrementDeleteAPIView.as_view(), name='encadrement_delete'),
+
+    #Recherche:
+    path('chercheur-search/', views.ChercheurSearchAPIView.as_view(), name='chercheur-search'),
+    path('encadrements/search/', views.EncadrementSearchAPIView.as_view(), name='encadrement_search'),
+    path('projets/search/', views.ProjetSearchAPIView.as_view(), name='projet_search'),
 ]
     
 
