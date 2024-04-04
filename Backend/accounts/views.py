@@ -6,10 +6,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied
 from django.core.mail import send_mail
-from lmcs.models import Chercheur
+
 
 from accounts.serializers import UserRegisterSerializer, LoginSerializer, AddUserSerializer, UserSerializer, \
     PasswordResetRequestSerializer, SetNewPasswordSerializer
+#, LoginSerializer, \
+   # PasswordResetRequestSerializer, SetNewPasswordSerializer, AddUserSerializer, UserSerializer
 from rest_framework import status
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
@@ -17,8 +19,12 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from rest_framework.permissions import IsAuthenticated
 from .models import User
 from rest_framework.generics import DestroyAPIView
+from lmcs.models import Chercheur
 from .permissions import IsAdminUser
-class RegisterView1(GenericAPIView):
+
+
+'''
+class RegisterView(GenericAPIView):
     serializer_class = UserRegisterSerializer
 
     def post(self, request):
@@ -43,8 +49,7 @@ class RegisterView1(GenericAPIView):
         from_email = 'your_email@example.com'  # Set your sender email here
         to_email = user.email  # Access email attribute using dot notation
         send_mail(subject, message, from_email, [to_email])
-
-
+'''
 class RegisterView(GenericAPIView):
     serializer_class = UserRegisterSerializer
 
@@ -93,6 +98,7 @@ class LoginUserView(GenericAPIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 class LogoutAPIView(APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         # Perform logout actions here
         # For example, clear user session
@@ -102,6 +108,9 @@ class LogoutAPIView(APIView):
 
         return Response({"detail": "Déconnexion réussie.."}, status=status.HTTP_200_OK)
 
+
+
+'''
 
 
 class AddUserView(CreateAPIView):
@@ -130,7 +139,39 @@ class AddUserView(CreateAPIView):
         from_email = 'your_email@example.com'  # Set your sender email here
         to_email = user.email  # Access email attribute using dot notation
         send_mail(subject, message, from_email, [to_email])
+'''
+class AddUserView(CreateAPIView):
+    serializer_class = AddUserSerializer
+    permission_classes = [IsAuthenticated]
 
+    def perform_create(self, serializer):
+        if not (self.request.user.is_superuser or self.request.user.role == 'admin'):
+            raise PermissionDenied("Vous n'avez pas la permission d'effectuer cette action.")
+        user = serializer.save()
+
+        # Associate the registered user with the Chercheur model if chercheur_id is provided
+        chercheur_id = self.request.data.get('chercheur')
+        if chercheur_id:
+            chercheur = Chercheur.objects.get(pk=chercheur_id)
+            user.chercheur = chercheur
+            user.save()
+
+        # Send email notification
+        self.send_email_to_user(user)
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def send_email_to_user(self, user):
+        subject = 'Bienvenue à LMCS'
+        full_name = f"{user.first_name} {user.last_name}"  # Access attributes using dot notation
+        message = f'Bonjour {full_name},\n\nVous avez été ajouté à LMCSQUEST avec succès. Pour vous connecter, utilisez simplement cette adresse e-mail et utilisez les deux premières lettres de votre prénom comme mot de passe : LMCS_lesdeuxpremiereslettredevotreprenomenminiscule.'
+        from_email = 'your_email@example.com'  # Set your sender email here
+        to_email = user.email  # Access email attribute using dot notation
+        send_mail(subject, message, from_email, [to_email])
 class ListUsersView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -145,6 +186,8 @@ class ListUsersView(APIView):
         else:
             return Response({"detail": "Vous n'avez pas la permission d'effectuer cette action."}, status=403)
 
+
+'''
 class DeleteUserView(DestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -162,6 +205,27 @@ class DeleteUserView(DestroyAPIView):
                                 status=status.HTTP_403_FORBIDDEN)
         except User.DoesNotExist:
             return Response({"detail": "Utilisateur non trouvé."}, status=status.HTTP_404_NOT_FOUND)
+
+'''
+class DeleteUserView(DestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer  # Only for response serialization
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            user = self.get_object()
+            # Check permissions for user deletion
+            if request.user.is_superuser or (request.user.role == 'admin' and request.user != user):
+                user.delete()
+                return Response({"detail": "L'utilisateur a été supprimé avec succès."}, status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response({"detail": "Vous n'avez pas la permission de supprimer cet utilisateur."},
+                                status=status.HTTP_403_FORBIDDEN)
+        except User.DoesNotExist:
+            return Response({"detail": "Utilisateur non trouvé."}, status=status.HTTP_404_NOT_FOUND)
+
+
 
 
 class PasswordResetRequestView(GenericAPIView):
