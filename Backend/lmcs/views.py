@@ -870,3 +870,7 @@ class ProjetSearchAPIView(generics.ListAPIView):
             return Response({"detail": "Aucun résultat trouvé pour les filtres spécifiés."},status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+class PublicationDetailView(generics.RetrieveAPIView):
+    queryset = Publication.objects.all()
+    serializer_class = PublicationDetailSerializer
