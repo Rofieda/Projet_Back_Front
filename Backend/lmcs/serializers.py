@@ -163,3 +163,44 @@ class Conf_JournSerializerByChercheur(serializers.ModelSerializer):
     class Meta:
         model =Conf_journal
         exclude = ['Conf_Journal_id']
+
+
+
+#############################################RECHERCHE######################################################
+class ChercheurSearchSerializer(serializers.ModelSerializer):
+    detail_url = serializers.SerializerMethodField()
+    class Meta:
+        model = Chercheur
+        fields = ['nom_chercheur', 'prenom_chercheur', 'grade_ensignement', 'email', 'projet' ,'detail_url']
+
+    def get_detail_url(self, obj):
+        return reverse('Chercheur_detail', kwargs={'pk': obj.pk})
+
+
+class PublicationSearchSerializer(serializers.ModelSerializer):
+    detail_url = serializers.SerializerMethodField()
+    class Meta:
+        model = Publication
+        fields = ['titre_publication', 'Conf_Journal_id__p_type', 'annee', 'Conf_Journal_id__acronyme', 'citations' , 'detail_url']
+    def get_detail_url(self, obj):
+        return reverse('Conf_journal_detail', kwargs={'pk': obj.pk})
+
+
+class EncadrementSearchSerializer(serializers.ModelSerializer):
+    detail_url = serializers.SerializerMethodField()
+    class Meta:
+        model = Encadrement
+        fields = ['intitule', 'type_encadrement',  'annee_debut','annee_fin' , 'detail_url']
+
+    def get_detail_url(self, obj):
+        return reverse('Encadrement_detail', kwargs={'pk': obj.pk})
+
+
+class ProjetSearchSerializer(serializers.ModelSerializer):
+    detail_url = serializers.SerializerMethodField()
+    class Meta:
+        model = Projet
+        fields = ['titre_projet', 'annee_debut', 'annee_fin' , 'detail_url']
+
+    def get_detail_url(self, obj):
+        return reverse('Projet_detail', kwargs={'pk': obj.pk})
