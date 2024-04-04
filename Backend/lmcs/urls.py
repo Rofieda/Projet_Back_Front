@@ -41,6 +41,8 @@ urlpatterns =[
     path('chercheur-search/', views.ChercheurSearchAPIView.as_view(), name='chercheur-search'),
     path('encadrements/search/', views.EncadrementSearchAPIView.as_view(), name='encadrement_search'),
     path('projets/search/', views.ProjetSearchAPIView.as_view(), name='projet_search'),
+   #publication_detail:
+    path('publication/<int:pk>/', views.PublicationDetailView.as_view(), name='publication_detail'),
 ]
     
 
