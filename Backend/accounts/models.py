@@ -45,6 +45,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True)
     chercheur = models.OneToOneField(Chercheur, on_delete=models.SET_NULL, null=True, related_name='user')
     auth_provider = models.CharField(max_length=50, blank=False, null=False, default=AUTH_PROVIDERS.get('email'))
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
     objects = UserManager()
@@ -73,3 +74,4 @@ class User(AbstractBaseUser, PermissionsMixin):
             self.save()
         else:
             raise ValueError("Invalid role name")
+
