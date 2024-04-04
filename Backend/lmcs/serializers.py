@@ -178,13 +178,22 @@ class ChercheurSearchSerializer(serializers.ModelSerializer):
 
 
 class PublicationSearchSerializer(serializers.ModelSerializer):
+    p_type = serializers.SerializerMethodField()
+    acronyme = serializers.SerializerMethodField()
     detail_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Publication
-        fields = ['titre_publication', 'Conf_Journal_id__p_type', 'annee', 'Conf_Journal_id__acronyme', 'citations' , 'detail_url']
-    def get_detail_url(self, obj):
-        return reverse('Conf_journal_detail', kwargs={'pk': obj.pk})
+        fields = ['titre_publication', 'p_type', 'annee', 'acronyme', 'citations', 'detail_url']
 
+    def get_p_type(self, obj):
+        return obj.Conf_Journal_id.p_type if obj.Conf_Journal_id else None
+
+    def get_acronyme(self, obj):
+        return obj.Conf_Journal_id.acronyme if obj.Conf_Journal_id else None
+
+    def get_detail_url(self, obj):
+        return reverse('publication_detail', kwargs={'pk': obj.pk})
 
 class EncadrementSearchSerializer(serializers.ModelSerializer):
     detail_url = serializers.SerializerMethodField()
@@ -204,3 +213,20 @@ class ProjetSearchSerializer(serializers.ModelSerializer):
 
     def get_detail_url(self, obj):
         return reverse('Projet_detail', kwargs={'pk': obj.pk})
+
+class PublicationDetailSerializer(serializers.ModelSerializer):
+    acronyme = serializers.CharField(source='Conf_Journal_id.acronyme', read_only=True)
+    nom = serializers.CharField(source='Conf_Journal_id.nom', read_only=True)
+    p_type = serializers.CharField(source='Conf_Journal_id.p_type', read_only=True)
+    periodicite = serializers.CharField(source='Conf_Journal_id.periodicite', read_only=True)
+    lien = serializers.CharField(source='Conf_Journal_id.lien', read_only=True)
+    core_classification = serializers.CharField(source='Conf_Journal_id.core_classification', read_only=True)
+    scimago_classification = serializers.CharField(source='Conf_Journal_id.scimago_classification', read_only=True)
+    qualis_classification = serializers.CharField(source='Conf_Journal_id.qualis_classification', read_only=True)
+    dgrsdt_classification = serializers.CharField(source='Conf_Journal_id.dgrsdt_classification', read_only=True)
+
+    class Meta:
+        model = Publication
+        fields = ['titre_publication', 'acronyme', 'nom', 'p_type', 'periodicite', 'lien', 'core_classification',
+                  'scimago_classification', 'qualis_classification', 'dgrsdt_classification', 'annee', 'volume',
+                  'citations', 'lien_publie', 'nombre_page', 'rang_chercheur']
