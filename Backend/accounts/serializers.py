@@ -37,6 +37,12 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         password2 = attrs.get('password2', '')
         if password != password2:
             raise serializers.ValidationError("Passwords do not match")
+
+        # Role validation
+        role = attrs.get('role')
+        if role not in dict(User.ROLE_CHOICES).keys():
+            raise serializers.ValidationError("Invalid role specified")
+
         return attrs
 
     def create(self, validated_data):
@@ -83,6 +89,7 @@ class LoginSerializer(serializers.ModelSerializer):
         }
 
 
+'''
 class AddUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=68, min_length=6, write_only=True)
     password2 = serializers.CharField(max_length=68, min_length=6, write_only=True)
@@ -109,11 +116,57 @@ class AddUserSerializer(serializers.ModelSerializer):
         )
         user.assign_role(role)
         return user
+'''
 
+
+class AddUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(max_length=68, min_length=6, write_only=True)
+    password2 = serializers.CharField(max_length=68, min_length=6, write_only=True)
+    role = serializers.ChoiceField(choices=User.ROLE_CHOICES)
+
+    class Meta:
+        model = User
+        fields = ['email', 'first_name', 'last_name', 'password', 'password2', 'role']
+
+    def validate(self, attrs):
+        password = attrs.get('password', '')
+        password2 = attrs.get('password2', '')
+        if password != password2:
+            raise serializers.ValidationError("Passwords do not match")
+
+        # Role validation
+        role = attrs.get('role')
+        if role not in dict(User.ROLE_CHOICES).keys():
+            raise serializers.ValidationError("Invalid role specified")
+
+        return attrs
+
+    def create(self, validated_data):
+        role = validated_data.pop('role')
+        user = User.objects.create_user(
+            email=validated_data['email'],
+            first_name=validated_data.get('first_name'),
+            last_name=validated_data.get('last_name'),
+            password=validated_data.get('password')
+        )
+        user.assign_role(role)
+        return user
+
+'''
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'email', 'first_name', 'last_name', 'role']
+'''
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    delete_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['email', 'first_name', 'last_name', 'role', 'delete_url']
+
+    def get_delete_url(self, obj):
+        return reverse('delete_user', kwargs={'pk': obj.pk})
 
 
 
