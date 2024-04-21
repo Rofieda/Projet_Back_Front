@@ -13,9 +13,16 @@ class ProjetListSerializer(serializers.ModelSerializer):
         return reverse('Projet_detail', kwargs={'pk': obj.pk})  # Generates URL for detail view
 
 class ProjetDetailSerializer(serializers.ModelSerializer):
+    membre_liste = serializers.SerializerMethodField()
+
     class Meta: 
         model = Projet
-        exclude = ['id_projet']
+        fields = ['titre_projet', 'chef_de_projet', 'domaine', 'annee_debut', 'annee_fin', 'membre_liste']
+
+    def get_membre_liste(self, obj):
+        membres = Chercheur.objects.filter(checheursprojets__id_projet=obj)
+        return [{'nom_complet': f"{membre.nom_chercheur} {membre.prenom_chercheur}"} for membre in membres]
+
 
 class ProjetCreatSerializer(serializers.ModelSerializer):
     class Meta:
