@@ -24,68 +24,38 @@ from .serializers import ChercheurSearchSerializer
 from rest_framework import generics, permissions
 
 
-# ____________________________________________________________________________________________
-class ProjetListAPIview(generics.ListAPIView):
-    queryset = Projet.objects.all()
-    serializer_class = ProjetListSerializer
+#____________________________________________________________________________________________
 
+#____________________________________________________________________________________________
 
-# ____________________________________________________________________________________________
-class ProjetDetailAPIview(generics.RetrieveAPIView):
-    queryset = Projet.objects.all()
-    serializer_class = ProjetDetailSerializer
+#____________________________________________________________________________________________
 
-
-# ____________________________________________________________________________________________
-class EncadrementListAPIview(generics.ListAPIView):
-    queryset = Encadrement.objects.all()
-    serializer_class = EncadrementListSerializer
-
-
-# ____________________________________________________________________________________________
-class EncadrementDetailAPIview(generics.RetrieveAPIView):
-    queryset = Encadrement.objects.all()
-    serializer_class = EncadrementDetailSerializer
-
-
-# ____________________________________________________________________________________________
+#____________________________________________________________________________________________ 
 class ChercheurListAPIview(generics.ListAPIView):
     queryset = Chercheur.objects.all()
     serializer_class = ChercheurListSerializer
-
-
-# ____________________________________________________________________________________________
-class ChercheurDetailAPIview(generics.RetrieveAPIView):  # for show details for each chercheur
+#____________________________________________________________________________________________
+class ChercheurDetailAPIview(generics.RetrieveAPIView):# for show details for each chercheur 
     queryset = Chercheur.objects.all()
     serializer_class = ChercheurDetailSerializer
-
-
-# ____________________________________________________________________________________________
+#____________________________________________________________________________________________
 class ChercheurCreatAPIview(generics.CreateAPIView):
-    queryset = Chercheur.objects.all()
-    serializer_class = ChercheurCreat
-
-
-# ____________________________________________________________________________________________
-class ConfJournalListAPIview(generics.ListAPIView):  # pour gerer l'affichage de la list des confjournal
+    queryset=Chercheur.objects.all()
+    serializer_class=ChercheurCreat
+#____________________________________________________________________________________________
+class ConfJournalListAPIview(generics.ListAPIView): #pour gerer l'affichage de la list des confjournal 
     queryset = Conf_journal.objects.all()
     serializer_class = ConfJournalListSerializer
-
-
-# ____________________________________________________________________________________________
-class ConfJournalDetailAPIview(generics.RetrieveAPIView):  # for show details for each chercheur
+#____________________________________________________________________________________________
+class ConfJournalDetailAPIview(generics.RetrieveAPIView):# for show details for each chercheur 
     queryset = Conf_journal.objects.all()
-    serializer_class = ConfJournalDetailSerializer
-
-
-# ____________________________________________________________________________________________
+    serializer_class = ConfJournalDetailSerializer 
+#____________________________________________________________________________________________    
 class ConfJournalCreatAPIview(generics.CreateAPIView):
     queryset = Conf_journal.objects.all()
     serializer_class = ConfJournalCreat
     permission_classes = [IsAuthenticated]
-
-
-# ____________________________________________________________________________________________
+#____________________________________________________________________________________________
 class PublicationCreateAPIView1234567(APIView):
     def post(self, request):
         # Assuming the request contains data for the new publication
@@ -99,7 +69,7 @@ class PublicationCreateAPIView1234567(APIView):
         lien_publie = data.get('lien_publie')
         nombre_page = data.get('nombre_page')
         rang_chercheur = data.get('rang_chercheur')
-        # get the connected chercheur id
+        #get the connected chercheur id 
         chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
 
         try:
@@ -107,15 +77,14 @@ class PublicationCreateAPIView1234567(APIView):
             chercheur = Chercheur.objects.get(id_chercheur=chercheur_id)
         except Chercheur.DoesNotExist:
             return Response({"error": "Chercheur does not exist."}, status=status.HTTP_400_BAD_REQUEST)
-
+        
         # Retrieve Conf_journal using provided acronym
         acronym = data.get('conf_journal_acronym')
-        conf_journ = data.get('conf_journ')
-        type = data.get('type')
+        conf_journ=data.get('conf_journ')
+        type=data.get('type')
         conf_journal = Conf_journal.objects.filter(acronyme=acronym).first()
         if not conf_journal:
-            return Response({"error": "Conf_journal with provided acronym not found."},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Conf_journal with provided acronym not found."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Create the publication with annee value assigned
         publication = Publication(
@@ -129,7 +98,7 @@ class PublicationCreateAPIView1234567(APIView):
             nombre_page=nombre_page,
             rang_chercheur=rang_chercheur
         )
-
+        
         # Save the publication
         publication.save()
 
@@ -137,9 +106,8 @@ class PublicationCreateAPIView1234567(APIView):
         serializer = PublicationSerializer(publication)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-# _______________________________________________________________________________________________
+    
+#_______________________________________________________________________________________________
 class PublicationCreateAPIView(APIView):
     def post(self, request):
         data = request.data
@@ -152,8 +120,8 @@ class PublicationCreateAPIView(APIView):
         lien_publie = data.get('lien_publie')
         nombre_page = data.get('nombre_page')
         rang_chercheur = data.get('rang_chercheur')
-
-        # Get the connected chercheur id
+        
+        # Get the connected chercheur id 
         chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
 
         try:
@@ -161,15 +129,16 @@ class PublicationCreateAPIView(APIView):
             chercheur = Chercheur.objects.get(id_chercheur=chercheur_id)
         except Chercheur.DoesNotExist:
             return Response({"error": "Chercheur does not exist."}, status=status.HTTP_400_BAD_REQUEST)
-
+        
         # Retrieve Conf_journal using provided acronym
         acronym = data.get('conf_journal_acronym')
         conf_journ = data.get('conf_journ')
-        type = data.get('type')
+    
         conf_journal = Conf_journal.objects.filter(acronyme=acronym).first()
         if not conf_journal:
-            return Response({"error": "Conf_journal with provided acronym not found."},
-                            status=status.HTTP_400_BAD_REQUEST)
+            conf_journal=Conf_journal.objects.filter(nom=conf_journ).first()
+            if not conf_journal: 
+                return Response({"error": "Conf_journal Does not exist with this aacronyme and name found."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Check if a publication with the same chercheur_id, conf_journal, and titre_publication exists
         existing_publication = Publication.objects.filter(
@@ -179,14 +148,12 @@ class PublicationCreateAPIView(APIView):
         ).exists()
 
         if existing_publication:
-            return Response(
-                {"error": "Publication with the same chercheur, conf_journal, and titre_publication already exists."},
-                status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Publication with the same chercheur, conf_journal, and titre_publication already exists."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Create the publication with annee value assigned
         publication = Publication(
             id_chercheur=chercheur,
-            Conf_Journal_id=conf_journal,
+            Conf_Journal_id=conf_journal,  
             annee=annee,
             titre_publication=titre_publication,
             volume=volume,
@@ -195,7 +162,7 @@ class PublicationCreateAPIView(APIView):
             nombre_page=nombre_page,
             rang_chercheur=rang_chercheur
         )
-
+        
         # Save the publication
         publication.save()
 
@@ -203,9 +170,7 @@ class PublicationCreateAPIView(APIView):
         serializer = PublicationSerializer(publication)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-# ____________________________________________________________________________________________
+#____________________________________________________________________________________________
 class EncadrementCreatAPIviewFirst(generics.CreateAPIView):
     queryset = Encadrement.objects.all()
     serializer_class = EncadrementCreatSerializer
@@ -227,13 +192,12 @@ class EncadrementCreatAPIviewFirst(generics.CreateAPIView):
 
         # Vérifier si un encadrement avec le même intitulé existe déjà
         existing_encadrement = Encadrement.objects.filter(intitule=encadrement_data['intitule']).first()
-        chercheur1 = data.get('chercheur1')
-        chercheur2 = data.get('chercheur2')
+        chercheur1=data.get('chercheur1')
+        chercheur2=data.get('chercheur2')
         if existing_encadrement:
             # Si l'encadrement existe déjà, établir la relation entre ce encadrement et le chercheur
             with connection.cursor() as cursor:
-                cursor.execute("INSERT INTO lmcs_checheursencadrements (chercheur_id, encadrement_id) VALUES (%s, %s)",
-                               [chercheur_id, existing_encadrement.id_encadrement])
+                cursor.execute("INSERT INTO lmcs_checheursencadrements (chercheur_id, encadrement_id) VALUES (%s, %s)", [chercheur_id, existing_encadrement.id_encadrement])
             # Serializer l'encadrement existant pour renvoyer en réponse
             serializer = self.get_serializer(existing_encadrement)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -244,14 +208,415 @@ class EncadrementCreatAPIviewFirst(generics.CreateAPIView):
             encadrement = encadrement_serializer.save()
             # Établir la relation entre le nouvel encadrement et le chercheur
             with connection.cursor() as cursor:
-                cursor.execute("INSERT INTO lmcs_checheursencadrements (chercheur_id, encadrement_id) VALUES (%s, %s)",
-                               [chercheur_id, encadrement.id_encadrement])
+                cursor.execute("INSERT INTO lmcs_checheursencadrements (chercheur_id, encadrement_id) VALUES (%s, %s)", [chercheur_id, encadrement.id_encadrement])
             serializer = self.get_serializer(encadrement)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+#____________________________________________________________________________________________
 
-# ____________________________________________________________________________________________
 
+#____________________________________________________________________________________________
+class ProjetCreateAPIViewfirstfff (generics.CreateAPIView):
+    queryset = Projet.objects.all()
+    serializer_class = ProjetCreatSerializer
+    permission_classes = [IsAuthenticated]
+
+
+    def create(self, request, *args, **kwargs):
+        # Assuming the request contains data for the new projet
+        data = request.data
+
+        # Extract data for the new projet
+        projet_data = {
+            'titre_projet': data.get('titre_projet'),
+            'chef_de_projet': data.get('chef_de_projet'),
+            'domaine': data.get('domaine'),
+            'annee_debut': data.get('annee_debut'),
+            'annee_fin': data.get('annee_fin'),
+        }
+
+        # Manually provided Chercheur ID
+        chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
+
+
+        #try:
+            # Retrieve Chercheur using provided Chercheur ID
+         #   chercheur = Chercheur.objects.get(id_chercheur=chercheur_id)
+        #except Chercheur.DoesNotExist:
+         #   return Response({"error": "Chercheur with provided ID does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if Projet with the same title exist in the projet table 
+        existing_projet = Projet.objects.filter(titre_projet=projet_data['titre_projet']).first()
+        projet = None  # to avoid the erreur 
+
+        if existing_projet:
+            # If Projet exists, establish the relationship with the chercheur
+            with connection.cursor() as cursor:
+                cursor.execute("INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)", [chercheur_id, existing_projet.id_projet])
+        else:
+            # If Projet doesn't exist, create it
+            projet_serializer = self.get_serializer(data=projet_data)
+            projet_serializer.is_valid(raise_exception=True)
+            projet = projet_serializer.save()
+
+            # Establish the relationship with the chercheur
+            with connection.cursor() as cursor:
+                cursor.execute("INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)", [chercheur_id, projet.id_projet])
+
+        # Serialize the created Projet
+        serializer = self.get_serializer(projet)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+#____________________________________________________________________________________________
+
+class ProjetCreateAPIView22(generics.CreateAPIView):
+    queryset = Projet.objects.all()
+    serializer_class = ProjetCreatSerializer
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+
+        # Manually provided Chercheur ID
+        chercheur_id = None
+        if request.user.is_authenticated:
+            chercheur = request.user.chercheur
+            if chercheur:
+                chercheur_id = chercheur.id_chercheur
+
+        if chercheur_id: # the chercheur will create the project
+            data = request.data
+
+            # Extract data for the new projet
+            projet_data = {
+                'titre_projet': data.get('titre_projet'),
+                'chef_de_projet': data.get('chef_de_projet'),
+                'domaine': data.get('domaine'),
+                'annee_debut': data.get('annee_debut'),
+                'annee_fin': data.get('annee_fin'),
+            }
+
+            # 
+            chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
+
+
+            # Check if Projet with the same title exist in the projet table 
+            existing_projet = Projet.objects.filter(titre_projet=projet_data['titre_projet']).first()
+            projet = None  # to avoid the erreur 
+
+            if existing_projet:
+                # If Projet exists, establish the relationship with the chercheur
+                with connection.cursor() as cursor:
+                    cursor.execute("INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)", [chercheur_id, existing_projet.id_projet])
+            else:
+                # If Projet doesn't exist, create it
+                projet_serializer = self.get_serializer(data=projet_data)
+                projet_serializer.is_valid(raise_exception=True)
+                projet = projet_serializer.save()
+
+                # Establish the relationship with the chercheur
+                with connection.cursor() as cursor:
+                    cursor.execute("INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)", [chercheur_id, projet.id_projet])
+
+            # Serialize the created Projet
+            serializer = self.get_serializer(projet)
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+        else:
+            data = request.data
+
+            # Assistant creating the projet
+            # Extract projet and chercheur data from the request
+            titre_projet = data.get('titre_projet')
+            chef_de_projet = data.get('chef_de_projet')
+            domaine = data.get('domaine')
+            annee_debut = data.get('annee_debut')
+            annee_fin = data.get('annee_fin')
+            membres = data.get('membres', [])
+
+            existing_projet = Projet.objects.filter(titre_projet=titre_projet).first()
+            projet = None  # to avoid the erreur 
+
+            if existing_projet: 
+                pass 
+            else : 
+                projet = Projet.objects.create(titre_projet=titre_projet,
+                                            chef_de_projet=chef_de_projet,
+                                            domaine=domaine,
+                                            annee_debut=annee_debut,
+                                            annee_fin=annee_fin)
+
+            # Establish relationships between chercheurs and projet
+            cpt=0 
+            for membre in membres:
+        
+                nom_chercheur, prenom_chercheur = membre.split()
+                chercheur = Chercheur.objects.filter(nom_chercheur=nom_chercheur, prenom_chercheur=prenom_chercheur).first()
+                if chercheur:
+                    cpt += 1
+                    # Chercheur exists, establish the relationship
+                    ChecheursProjets.objects.create(id_chercheur_id=chercheur, id_projet_id=projet)
+                else:
+                    if cpt==0 : 
+                         return Response({"error": "You should add at least one chercheur"}, status=status.HTTP_400_BAD_REQUEST)
+                    
+
+            # Return the response
+            serializer = self.get_serializer(projet)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+#____________________________________________________________________________________________
+            
+#____________________________________________________________________________________________
+
+
+
+#chercheur id using authentification 
+class PublicationByChercheurAPIView(generics.ListAPIView):
+    serializer_class = PublicationSerializerByChercheur
+   
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Get the chercheur_id from the authenticated user
+        chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
+        if chercheur_id:
+            return Publication.objects.filter(id_chercheur=chercheur_id)
+        else:
+            return Publication.objects.none()
+
+class PublicationModifyAPIView(generics.UpdateAPIView):
+    queryset = Publication.objects.all()
+    serializer_class = PublicationSerializer
+    permission_classes = [IsAuthenticated]
+
+class PublicationDeleteAPIView(generics.DestroyAPIView):
+    queryset = Publication.objects.all()
+    serializer_class = PublicationSerializer
+    permission_classes = [IsAuthenticated]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class ConfjournModify(generics.UpdateAPIView):
+    queryset = Conf_journal.objects.all()
+    serializer_class = Conf_JournSerializerByChercheur
+    permission_classes = [IsAuthenticated]
+
+
+
+#-----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------
+#--------------------------------- Les API des projets ----------------------------------------
+#---------------------------------------------------------------------------------------------
+#Afficher les projet de chercheur connecté avec la possibilité de faire un modification sur le projet , ou bien le supprimer  
+    
+class ProjetByChercheurAPIView(generics.ListAPIView):
+    serializer_class = ProjetSerializerByChercheur
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Get the chercheur_id from the authenticated user
+        if self.request.user.is_authenticated:
+            chercheur_id = self.request.user.chercheur.id_chercheur 
+        
+        if chercheur_id:
+            # Retrieve all project IDs associated with the chercheur
+            projet_ids = ChecheursProjets.objects.filter(id_chercheur_id=chercheur_id).values_list('id_projet', flat=True)
+         # Retrieve projects corresponding to the project IDs
+            return Projet.objects.filter(id_projet__in=projet_ids)
+        else:
+            return Projet.objects.none()
+        
+#///////////////////////////////////////////////////////////////////////////////////////////      
+# ////////////////////// pour modifier les information de projet ///////////////////////////
+        
+
+class ProjetModifyAPIView(generics.UpdateAPIView):
+    queryset = Projet.objects.all()
+    serializer_class = ProjetSerializerByChercheur
+    permission_classes = [IsAuthenticated]
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        # Response data indicating successful modification
+        response_data = {
+            "status": "Modification applied successfully"
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+    
+#///////////////////////////////////////////////////////////////////////////////////////////      
+# ////////////////////// pour supprimer le projet ///////////////////////////
+
+    
+class ProjetDeleteAPIView(generics.DestroyAPIView):
+    queryset = Projet.objects.all()
+    serializer_class = ProjetSerializerByChercheur
+    permission_classes = [IsAuthenticated]
+
+#///////////////////////////////////////////////////////////////////////////////////////////      
+# ////////////////////// pour creer projet soit par chercheur , ou par assiastant  ///////////////////////////
+
+class ProjetCreateAPIView(generics.CreateAPIView):
+    queryset = Projet.objects.all()
+    serializer_class = ProjetCreatSerializer
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        projet_data = {
+            'titre_projet': data.get('titre_projet'),
+            'chef_de_projet': data.get('chef_de_projet'),
+            'domaine': data.get('domaine'),
+            'annee_debut': data.get('annee_debut'),
+            'annee_fin': data.get('annee_fin'),
+        }
+
+        # Get the connected user
+        user = self.request.user
+
+        if hasattr(user, 'chercheur') and user.chercheur is not None :  # Check if the user is a researcher
+            chercheur_id = user.chercheur.id_chercheur
+            existing_projet = Projet.objects.filter(titre_projet=projet_data['titre_projet']).first()
+            members = data.get('members', [])
+            if existing_projet:
+                # If the project exists, establish the relationship with the researcher
+                with connection.cursor() as cursor:
+                    cursor.execute("INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)", [chercheur_id, existing_projet.id_projet])
+            else:
+                # If the project doesn't exist, create it
+                projet_serializer = self.get_serializer(data=projet_data)
+                projet_serializer.is_valid(raise_exception=True)
+                projet = projet_serializer.save()
+
+                # Establish the relationship with the researcher
+                with connection.cursor() as cursor:
+                    cursor.execute("INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)", [chercheur_id, projet.id_projet])
+
+            serializer = self.get_serializer(projet)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:  # User is an assistant
+            members = data.get('members', [])
+            if not members:
+                return Response({"error": "At least one member should be specified"}, status=status.HTTP_400_BAD_REQUEST)
+
+            existing_projet = Projet.objects.filter(titre_projet=projet_data['titre_projet']).first()
+
+            if existing_projet:
+                # If the project exists, establish relationships with specified members
+                for member_name in members:
+                    try:
+                        chercheur = Chercheur.objects.get(nom_chercheur=member_name.split()[0],prenom_chercheur=member_name.split()[1])
+                        if not ChecheursProjets.objects.filter(id_chercheur_id=chercheur.id_chercheur, id_projet_id=existing_projet.id_projet).exists():
+                            with connection.cursor() as cursor:
+                                cursor.execute("INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)", [chercheur.id_chercheur, existing_projet.id_projet])
+                    except Chercheur.DoesNotExist:
+                        return Response({"error": f"Chercheur '{member_name}' does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                # If the project doesn't exist, create it and establish relationships with specified members
+                projet_serializer = self.get_serializer(data=projet_data)
+                projet_serializer.is_valid(raise_exception=True)
+                existing_projet = projet_serializer.save()
+                
+                for member_name in members:
+                    member_name = member_name.strip()  # Remove extra spaces
+                    member_parts = member_name.split()
+                    if len(member_parts) < 2:
+                        return Response({"error": f"Invalid member name: {member_name}"}, status=status.HTTP_400_BAD_REQUEST)
+    
+                    first_name = member_parts[0]
+                    last_name = member_parts[1]
+
+                    try:
+                          # Searching for the chercheur using both first name and last name
+                        chercheur = Chercheur.objects.get(nom_chercheur=first_name, prenom_chercheur=last_name)
+                        with connection.cursor() as cursor:
+                            cursor.execute("INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)", [chercheur.id_chercheur, existing_projet.id_projet])
+                    except Chercheur.DoesNotExist:
+                        return Response({"error": f"Chercheur '{member_name}' does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            serializer = self.get_serializer(existing_projet)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+#/////////////////////////////////////////////////////////////////////////////////////////////   
+# ////////////////////// pour lister les projet sans detail  /////////////////////////////////
+
+class ProjetListAPIview(generics.ListAPIView):
+    queryset = Projet.objects.all()
+    serializer_class = ProjetListSerializer
+
+#///////////////////////////////////////////////////////////////////////////////////////////////     
+# ////////////////////// pour afficher le detail de projet selectioné ///////////////////////////
+
+class ProjetDetailAPIview(generics.RetrieveAPIView):
+    queryset = Projet.objects.all()
+    serializer_class = ProjetDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+#--------------------------------- La fin des API des projets ------------------------------------
+#-------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------
+#--------------------------------- Les API des Encadrements --------------------------------------
+#-------------------------------------------------------------------------------------------------
+#Afficher les encadrement de chercheur connecté avec la possibilité de faire un modification sur l'encadrement , ou bien le supprimer  
+    
+class EncadrementByChercheurAPIView(generics.ListAPIView):
+    serializer_class = EncadrementSerializerByChercheur
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
+        if chercheur_id:
+            # Step 1: Retrieve all project IDs associated with the chercheur
+            encadrements_ids = ChecheursEncadrements.objects.filter(chercheur_id=chercheur_id).values_list('encadrement_id', flat=True)
+            # Step 2: Retrieve projects corresponding to the project IDs
+            return Encadrement.objects.filter(id_encadrement__in=encadrements_ids)
+        else:
+            return Encadrement.objects.none()
+        
+# ////////////////////// pour modifier les information de l'encadrement ///////////////////////////
+
+class EncadrementModifyAPIView(generics.UpdateAPIView):
+    queryset = Encadrement.objects.all()
+    serializer_class = EncadrementSerializerByChercheur
+    permission_classes = [IsAuthenticated]
+# ////////////////////// pour supprimer l'encadrement ///////////////////////////
+    
+class EncadrementDeleteAPIView(generics.DestroyAPIView):
+    queryset = Encadrement.objects.all()
+    serializer_class = EncadrementSerializerByChercheur
+    permission_classes = [IsAuthenticated]
+
+# ////////////////////// pour lister les encadrement sans detail  ///////////////////////////
+
+class EncadrementListAPIview(generics.ListAPIView):
+    queryset=Encadrement.objects.all()
+    serializer_class=EncadrementListSerializer    
+
+# ////////////////////// pour afficher le detail de l'encadrement selectioné ///////////////////////////
+
+class EncadrementDetailAPIview(generics.RetrieveAPIView):
+    queryset = Encadrement.objects.all()
+    serializer_class = EncadrementDetailSerializer
+
+# ////////////////////// pour creer projet soit par chercheur , ou par assiastant  ///////////////////////////
+    
 class EncadrementCreatAPIview(generics.CreateAPIView):
     queryset = Encadrement.objects.all()
     serializer_class = EncadrementCreatSerializer
@@ -259,18 +624,23 @@ class EncadrementCreatAPIview(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         data = request.data
+        
         # Check if the user is authenticated and retrieve their corresponding chercheur id
         chercheur_id = None
         if request.user.is_authenticated:
             chercheur = request.user.chercheur
             if chercheur:
                 chercheur_id = chercheur.id_chercheur
+        
+        chercheur2exist=0
+        
+
 
         # If chercheur_id is not None, it means the user is a chercheur
         if chercheur_id:
             # Use the same logic implemented previously for chercheurs
             # ...
-
+            
             data = request.data
             encadrement_data = {
                 'type_encadrement': data.get('type_encadrement'),
@@ -282,18 +652,16 @@ class EncadrementCreatAPIview(generics.CreateAPIView):
                 'nom_prenom_etd1': data.get('nom_prenom_etd1'),
                 'nom_prenom_etd2': data.get('nom_prenom_etd2'),
             }
-            # chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
+            #chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
 
             # Vérifier si un encadrement avec le même intitulé existe déjà
             existing_encadrement = Encadrement.objects.filter(intitule=encadrement_data['intitule']).first()
-            chercheur1 = data.get('chercheur1')
-            chercheur2 = data.get('chercheur2')
+            chercheur1=data.get('chercheur1')
+            chercheur2=data.get('chercheur2')
             if existing_encadrement:
                 # Si l'encadrement existe déjà, établir la relation entre ce encadrement et le chercheur
                 with connection.cursor() as cursor:
-                    cursor.execute(
-                        "INSERT INTO lmcs_checheursencadrements (chercheur_id, encadrement_id) VALUES (%s, %s)",
-                        [chercheur_id, existing_encadrement.id_encadrement])
+                    cursor.execute("INSERT INTO lmcs_checheursencadrements (chercheur_id, encadrement_id) VALUES (%s, %s)", [chercheur_id, existing_encadrement.id_encadrement])
                 # Serializer l'encadrement existant pour renvoyer en réponse
                 serializer = self.get_serializer(existing_encadrement)
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -304,9 +672,7 @@ class EncadrementCreatAPIview(generics.CreateAPIView):
                 encadrement = encadrement_serializer.save()
                 # Établir la relation entre le nouvel encadrement et le chercheur
                 with connection.cursor() as cursor:
-                    cursor.execute(
-                        "INSERT INTO lmcs_checheursencadrements (chercheur_id, encadrement_id) VALUES (%s, %s)",
-                        [chercheur_id, encadrement.id_encadrement])
+                    cursor.execute("INSERT INTO lmcs_checheursencadrements (chercheur_id, encadrement_id) VALUES (%s, %s)", [chercheur_id, encadrement.id_encadrement])
                 serializer = self.get_serializer(encadrement)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -327,38 +693,52 @@ class EncadrementCreatAPIview(generics.CreateAPIView):
             # Check if encadrement with the same title exists
             existing_encadrement = Encadrement.objects.filter(intitule=encadrement_data['intitule']).first()
             chercheur1 = data.get('chercheur1')
+            if not chercheur1 : 
+                return Response({"error": "you should give at least one chercheur "}, status=status.HTTP_400_BAD_REQUEST)
+            if ' ' in chercheur1:
+                try:
+                    chercheur1_id = Chercheur.objects.get(nom_chercheur=chercheur1.split()[0], prenom_chercheur=chercheur1.split()[1]).id_chercheur
+                except Chercheur.DoesNotExist:
+                    return Response({"error": "Chercheur 1 does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"error": "chercheur full name should containe space"}, status=status.HTTP_400_BAD_REQUEST)
+            
             chercheur2 = data.get('chercheur2')
+            if chercheur2:
+                chercheur2exist=1
+                chercheur2_split = chercheur2.split()
+                if len(chercheur2_split) >= 2:
+                    try:
+                        chercheur2_id = Chercheur.objects.get(nom_chercheur=chercheur2_split[0], prenom_chercheur=chercheur2_split[1]).id_chercheur
+                    except Chercheur.DoesNotExist:
+                        return Response({"error": "Chercheur 2 does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response({"error": "Chercheur 2 full name should contain at least two parts separated by a space"}, status=status.HTTP_400_BAD_REQUEST)
+            else :
+                chercheur2exist=0
 
             try:
-                chercheur1_id = Chercheur.objects.get(nom_chercheur=chercheur1.split()[0],
-                                                      prenom_chercheur=chercheur1.split()[1]).id_chercheur
+                chercheur1_id = Chercheur.objects.get(nom_chercheur=chercheur1.split()[0], prenom_chercheur=chercheur1.split()[1]).id_chercheur
             except Chercheur.DoesNotExist:
-                return Response({"error": "Chercheur 1 does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+                 return Response({"error": "Chercheur 1 does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
-            try:
-                chercheur2_id = Chercheur.objects.get(nom_chercheur=chercheur2.split()[0],
-                                                      prenom_chercheur=chercheur2.split()[1]).id_chercheur
-            except Chercheur.DoesNotExist:
-                return Response({"error": "Chercheur 2 does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            if chercheur2exist==1 :
+                try:
+                    chercheur2_id = Chercheur.objects.get(nom_chercheur=chercheur2.split()[0], prenom_chercheur=chercheur2.split()[1]).id_chercheur
+                except Chercheur.DoesNotExist:
+                    return Response({"error": "Chercheur 2 does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
-            # chercheur1_id = Chercheur.objects.filter(nom_chercheur=chercheur1.split()[0], prenom_chercheur=chercheur1.split()[1]).first().id_chercheur
-            # chercheur2_id = Chercheur.objects.filter(nom_chercheur=chercheur2.split()[0], prenom_chercheur=chercheur2.split()[1]).first().id_chercheur
+           #chercheur1_id = Chercheur.objects.filter(nom_chercheur=chercheur1.split()[0], prenom_chercheur=chercheur1.split()[1]).first().id_chercheur
+           # chercheur2_id = Chercheur.objects.filter(nom_chercheur=chercheur2.split()[0], prenom_chercheur=chercheur2.split()[1]).first().id_chercheur
+
 
             if existing_encadrement:
-                # If encadrement exists, establish relations between chercheurs and encadrement
-                # Retrieve chercheur ids using their full names
-                # chercheur1_id = Chercheur.objects.filter(nom_chercheur=chercheur1.split()[0], prenom_chercheur=chercheur1.split()[1]).first().id_chercheur
-                # chercheur2_id = Chercheur.objects.filter(nom_chercheur=chercheur2.split()[0], prenom_chercheur=chercheur2.split()[1]).first().id_chercheur
-
                 # Check if relations already exist
-                if not ChecheursEncadrements.objects.filter(chercheur_id=chercheur1_id,
-                                                            encadrement_id=existing_encadrement.id_encadrement).exists():
-                    ChecheursEncadrements.objects.create(chercheur_id=chercheur1_id,
-                                                         encadrement_id=existing_encadrement.id_encadrement)
-                if not ChecheursEncadrements.objects.filter(chercheur_id=chercheur2_id,
-                                                            encadrement_id=existing_encadrement.id_encadrement).exists():
-                    ChecheursEncadrements.objects.create(chercheur_id=chercheur2_id,
-                                                         encadrement_id=existing_encadrement.id_encadrement)
+                if not ChecheursEncadrements.objects.filter(chercheur_id=chercheur1_id, encadrement_id=existing_encadrement.id_encadrement).exists():
+                    ChecheursEncadrements.objects.create(chercheur_id=chercheur1_id, encadrement_id=existing_encadrement.id_encadrement)
+                if chercheur2exist==1 : 
+                    if not ChecheursEncadrements.objects.filter(chercheur_id=chercheur2_id, encadrement_id=existing_encadrement.id_encadrement).exists():
+                        ChecheursEncadrements.objects.create(chercheur_id=chercheur2_id, encadrement_id=existing_encadrement.id_encadrement)
 
                 serializer = self.get_serializer(existing_encadrement)
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -369,358 +749,207 @@ class EncadrementCreatAPIview(generics.CreateAPIView):
                 encadrement = encadrement_serializer.save()
 
                 # Retrieve chercheur ids using their full names
-                # chercheur1_id = Chercheur.objects.filter(nom_chercheur=chercheur1.split()[0], prenom_chercheur=chercheur1.split()[1]).first().id_chercheur
-                # chercheur2_id = Chercheur.objects.filter(nom_chercheur=chercheur2.split()[0], prenom_chercheur=chercheur2.split()[1]).first().id_chercheur
+                #chercheur1_id = Chercheur.objects.filter(nom_chercheur=chercheur1.split()[0], prenom_chercheur=chercheur1.split()[1]).first().id_chercheur
+                #chercheur2_id = Chercheur.objects.filter(nom_chercheur=chercheur2.split()[0], prenom_chercheur=chercheur2.split()[1]).first().id_chercheur
 
                 # Establish relations between chercheurs and encadrement
-                ChecheursEncadrements.objects.create(chercheur_id=chercheur1_id,
-                                                     encadrement_id=encadrement.id_encadrement)
-                ChecheursEncadrements.objects.create(chercheur_id=chercheur2_id,
-                                                     encadrement_id=encadrement.id_encadrement)
+                ChecheursEncadrements.objects.create(chercheur_id=chercheur1_id, encadrement_id=encadrement.id_encadrement)
+                ChecheursEncadrements.objects.create(chercheur_id=chercheur2_id, encadrement_id=encadrement.id_encadrement)
 
                 serializer = self.get_serializer(encadrement)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# ____________________________________________________________________________________________
-class ProjetCreateAPIViewfirstfff(generics.CreateAPIView):
-    queryset = Projet.objects.all()
-    serializer_class = ProjetCreatSerializer
-    permission_classes = [IsAuthenticated]
+#--------------------------------- La fin des API des encadrement ------------------------------------
+#-------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------
+#--------------------------------- Les API des Publications --------------------------------------
+#-------------------------------------------------------------------------------------------------
+#Afficher les encadrement de chercheur connecté avec la possibilité de faire un modification sur l'encadrement , ou bien le supprimer  
 
-    def create(self, request, *args, **kwargs):
-        # Assuming the request contains data for the new projet
-        data = request.data
 
-        # Extract data for the new projet
-        projet_data = {
-            'titre_projet': data.get('titre_projet'),
-            'chef_de_projet': data.get('chef_de_projet'),
-            'domaine': data.get('domaine'),
-            'annee_debut': data.get('annee_debut'),
-            'annee_fin': data.get('annee_fin'),
+@api_view(['GET', 'POST'])
+def get_statistics(request):
+    critere1 = request.data.get('critere1') or request.GET.get('critere1')
+    critere2 = request.data.get('critere2') or request.GET.get('critere2')
+
+    if critere1 == 'chercheur':
+        # Number total des chercheurs dans le labo 
+        total_researchers = Chercheur.objects.all().count()
+        
+        # Distribution of researchers by quality
+        distribution = {
+            'Enseignant-Chercheur': Chercheur.objects.filter(Qualite='Enseignant-Chercheur').count(),
+            'Chercheur': Chercheur.objects.filter(Qualite='Chercheur').count(),
+            'Doctorant': Chercheur.objects.filter(Qualite='Doctorant').count(),
+            'Autre': Chercheur.objects.filter(Qualite='Autre').count(),
         }
+        
+        # Top 4 researchers 
+        top_researchers = Chercheur.objects.order_by('-h_index')[:4]
+        top_researchers_data = [{f"{chercheur.nom_chercheur} {chercheur.prenom_chercheur}": chercheur.h_index} for chercheur in top_researchers]
 
-        # Manually provided Chercheur ID
-        chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
-
-        # try:
-        # Retrieve Chercheur using provided Chercheur ID
-        #   chercheur = Chercheur.objects.get(id_chercheur=chercheur_id)
-        # except Chercheur.DoesNotExist:
-        #   return Response({"error": "Chercheur with provided ID does not exist."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Check if Projet with the same title exist in the projet table
-        existing_projet = Projet.objects.filter(titre_projet=projet_data['titre_projet']).first()
-        projet = None  # to avoid the erreur
-
-        if existing_projet:
-            # If Projet exists, establish the relationship with the chercheur
-            with connection.cursor() as cursor:
-                cursor.execute("INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)",
-                               [chercheur_id, existing_projet.id_projet])
-        else:
-            # If Projet doesn't exist, create it
-            projet_serializer = self.get_serializer(data=projet_data)
-            projet_serializer.is_valid(raise_exception=True)
-            projet = projet_serializer.save()
-
-            # Establish the relationship with the chercheur
-            with connection.cursor() as cursor:
-                cursor.execute("INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)",
-                               [chercheur_id, projet.id_projet])
-
-        # Serialize the created Projet
-        serializer = self.get_serializer(projet)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-# ____________________________________________________________________________________________
-
-class ProjetCreateAPIView22(generics.CreateAPIView):
-    queryset = Projet.objects.all()
-    serializer_class = ProjetCreatSerializer
-    permission_classes = [IsAuthenticated]
-
-    def create(self, request, *args, **kwargs):
-        data = request.data
-
-        # Manually provided Chercheur ID
-        chercheur_id = None
-        if request.user.is_authenticated:
-            chercheur = request.user.chercheur
-            if chercheur:
-                chercheur_id = chercheur.id_chercheur
-
-        if chercheur_id:  # the chercheur will create the project
-            data = request.data
-
-            # Extract data for the new projet
-            projet_data = {
-                'titre_projet': data.get('titre_projet'),
-                'chef_de_projet': data.get('chef_de_projet'),
-                'domaine': data.get('domaine'),
-                'annee_debut': data.get('annee_debut'),
-                'annee_fin': data.get('annee_fin'),
+        data = {
+            'total_researchers': total_researchers,
+            'distribution': distribution,
+            'top_researchers': top_researchers_data
+        }
+        
+        
+        if critere2 == 'diplome':
+            diplomas = {
+                'Licence': Chercheur.objects.filter(diplome='Licence').count(),
+                'Master': Chercheur.objects.filter(diplome='Master').count(),
+                'Doctorat': Chercheur.objects.filter(diplome='Doctorat').count(),
+                'Ingéniorat': Chercheur.objects.filter(diplome='Ingéniorat').count(),
+                'Diplôme d''Études Supérieures': Chercheur.objects.filter(diplome='Diplôme d''Études Supérieures').count(),
+                'Diplôme de Formation Approfondie': Chercheur.objects.filter(diplome='Diplôme de Formation Approfondie').count(),
+                'Diplôme d''Études Approfondies': Chercheur.objects.filter(diplome='Diplôme d''Études Approfondies').count(),
+                'Autre': Chercheur.objects.filter(diplome='Autre').count()
             }
+            data['diplomas'] = diplomas
+            
+        elif critere2 == 'etablissement':
+            esi_count = Chercheur.objects.filter(etablissement='esi').count()
+            other_count = total_researchers - esi_count
+            data['esi_count'] = esi_count
+            data['other_count'] = other_count
+            
+        elif critere2 == 'grade_ensignement': 
+            grades = {
+                'Professeur': Chercheur.objects.filter(grade_ensignement='Professeur').count(),
+                'MCA': Chercheur.objects.filter(grade_ensignement='MCA').count(),
+                'MCB': Chercheur.objects.filter(grade_ensignement='MCB').count(),
+                'MAA': Chercheur.objects.filter(grade_ensignement='MAA').count(),
+                'MAB': Chercheur.objects.filter(grade_ensignement='MAB').count(),
+                'Doctorant': Chercheur.objects.filter(grade_ensignement='Doctorant').count(),
+                'NULL': Chercheur.objects.filter(grade_ensignement='NULL').count()
+            }
+            data['grades'] = grades
+        
+        elif critere2 == 'grade_recherche': 
+            grades_recherche = {
+                'Directeur de recherche': Chercheur.objects.filter(grade_recherche='Directeur de recherche').count(),
+                'Maître de recherche': Chercheur.objects.filter(grade_recherche='Maître de recherche').count(),
+                'NULL': Chercheur.objects.filter(grade_recherche='NULL').count()
+            }
+            data['grades'] = grades_recherche
 
-            #
-            chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
+    elif critere1 == 'publication':
+        # Number total des publications
+        total_publications = Publication.objects.all().count()
 
-            # Check if Projet with the same title exist in the projet table
-            existing_projet = Projet.objects.filter(titre_projet=projet_data['titre_projet']).first()
-            projet = None  # to avoid the erreur
+        # Top 4 publications
+        top_publications = Publication.objects.order_by('-citations')[:4]
+        top_publications_data = [{publication.titre_publication: publication.citations} for publication in top_publications]
 
-            if existing_projet:
-                # If Projet exists, establish the relationship with the chercheur
-                with connection.cursor() as cursor:
-                    cursor.execute("INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)",
-                                   [chercheur_id, existing_projet.id_projet])
-            else:
-                # If Projet doesn't exist, create it
-                projet_serializer = self.get_serializer(data=projet_data)
-                projet_serializer.is_valid(raise_exception=True)
-                projet = projet_serializer.save()
-
-                # Establish the relationship with the chercheur
-                with connection.cursor() as cursor:
-                    cursor.execute("INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)",
-                                   [chercheur_id, projet.id_projet])
-
-            # Serialize the created Projet
-            serializer = self.get_serializer(projet)
-
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        else:
-            data = request.data
-
-            # Assistant creating the projet
-            # Extract projet and chercheur data from the request
-            titre_projet = data.get('titre_projet')
-            chef_de_projet = data.get('chef_de_projet')
-            domaine = data.get('domaine')
-            annee_debut = data.get('annee_debut')
-            annee_fin = data.get('annee_fin')
-            membres = data.get('membres', [])
-
-            existing_projet = Projet.objects.filter(titre_projet=titre_projet).first()
-            projet = None  # to avoid the erreur
-
-            if existing_projet:
-                pass
-            else:
-                projet = Projet.objects.create(titre_projet=titre_projet,
-                                               chef_de_projet=chef_de_projet,
-                                               domaine=domaine,
-                                               annee_debut=annee_debut,
-                                               annee_fin=annee_fin)
-
-            # Establish relationships between chercheurs and projet
-            cpt = 0
-            for membre in membres:
-
-                nom_chercheur, prenom_chercheur = membre.split()
-                chercheur = Chercheur.objects.filter(nom_chercheur=nom_chercheur,
-                                                     prenom_chercheur=prenom_chercheur).first()
-                if chercheur:
-                    cpt += 1
-                    # Chercheur exists, establish the relationship
-                    ChecheursProjets.objects.create(id_chercheur_id=chercheur, id_projet_id=projet)
-                else:
-                    if cpt == 0:
-                        return Response({"error": "You should add at least one chercheur"},
-                                        status=status.HTTP_400_BAD_REQUEST)
-
-            # Return the response
-            serializer = self.get_serializer(projet)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-# ____________________________________________________________________________________________
-class ProjetCreateAPIView(generics.CreateAPIView):
-    queryset = Projet.objects.all()
-    serializer_class = ProjetCreatSerializer
-    permission_classes = [IsAuthenticated]
-
-    def create(self, request, *args, **kwargs):
-        data = request.data
-        projet_data = {
-            'titre_projet': data.get('titre_projet'),
-            'chef_de_projet': data.get('chef_de_projet'),
-            'domaine': data.get('domaine'),
-            'annee_debut': data.get('annee_debut'),
-            'annee_fin': data.get('annee_fin'),
+        data = {
+            'total_publications': total_publications,
+            'top_publications': top_publications_data
         }
 
-        # Get the connected user
-        user = self.request.user
+        if critere2 == 'type':
+            conference_count = Publication.objects.filter(Conf_Journal_id__p_type='Conférence').count()
+            journal_count = Publication.objects.filter(Conf_Journal_id__p_type='Journal').count()
+            data['conference_count'] = conference_count
+            data['journal_count'] = journal_count
 
-        if hasattr(user, 'chercheur') and user.chercheur is not None:  # Check if the user is a researcher
-            chercheur_id = user.chercheur.id_chercheur
-            existing_projet = Projet.objects.filter(titre_projet=projet_data['titre_projet']).first()
-            members = data.get('members', [])
-            if existing_projet:
-                # If the project exists, establish the relationship with the researcher
-                with connection.cursor() as cursor:
-                    cursor.execute("INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)",
-                                   [chercheur_id, existing_projet.id_projet])
-            else:
-                # If the project doesn't exist, create it
-                projet_serializer = self.get_serializer(data=projet_data)
-                projet_serializer.is_valid(raise_exception=True)
-                projet = projet_serializer.save()
+        elif critere2 == 'ecrit-par':
+            chercheur_nom = request.data.get('nom') or request.GET.get('nom')
+            chercheur_prenom = request.data.get('prenom') or request.GET.get('prenom')
+            chercheur = Chercheur.objects.get(nom_chercheur=chercheur_nom, prenom_chercheur=chercheur_prenom)
+            chercheur_publications = Publication.objects.filter(id_chercheur=chercheur.id_chercheur)
+            most_cited_publication = chercheur_publications.order_by('-citations').first()
+            data['chercheur_publication_count'] = chercheur_publications.count()
+            if most_cited_publication:
+                data['most_cited_publication'] = {
+                    'titre': most_cited_publication.titre_publication,
+                    'citations': most_cited_publication.citations,
+                    'lien': most_cited_publication.lien_publie
+                }
 
-                # Establish the relationship with the researcher
-                with connection.cursor() as cursor:
-                    cursor.execute("INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)",
-                                   [chercheur_id, projet.id_projet])
+    elif critere1 == 'Encadrement':
+        # Nombre total des encadrements
+        total_encadrements = Encadrement.objects.all().count()
+        
+        # Distribution des encadreurs et co-encadreurs
+        distribution_roles = {
+            'Encadreur': Encadrement.objects.filter(role_chercheur='encadreur').count(),
+            'Co-encadreur': Encadrement.objects.filter(role_chercheur='co_encadreur').count()
+        }
+        
+        data = {
+            'total_encadrements': total_encadrements,
+            'distribution_roles': distribution_roles
+        }
+        
+        if critere2 == 'type':
+            # Nombre d'encadrements par type
+            encadrements_par_type = {
+                'PFE': Encadrement.objects.filter(type_encadrement='PFE').count(),
+                'Master': Encadrement.objects.filter(type_encadrement='Master').count(),
+                'Doctorat': Encadrement.objects.filter(type_encadrement='Doctorat').count(),
+                'Autre': Encadrement.objects.filter(type_encadrement='Autre').count()
+            }
+            data['encadrements_par_type'] = encadrements_par_type
+            
+        elif critere2 == 'chercheur':
+            # Récupérer le nom et prénom du chercheur
+            chercheur_nom = request.data.get('nom') or request.GET.get('nom')
+            chercheur_prenom = request.data.get('prenom') or request.GET.get('prenom')
+            
+            # Récupérer l'ID du chercheur
+            chercheur = Chercheur.objects.get(nom_chercheur=chercheur_nom, prenom_chercheur=chercheur_prenom)
+            
+            # Récupérer le nombre d'encadrements où le chercheur est encadreur ou co-encadreur
+            encadrements_encadreur = Encadrement.objects.filter(role_chercheur='encadreur', chercheur=chercheur).count()
+            encadrements_co_encadreur = Encadrement.objects.filter(role_chercheur='co_encadreur', chercheur=chercheur).count()
+            
+            data['encadrements_par_chercheur'] = {
+                'encadrements_encadreur': encadrements_encadreur,
+                'encadrements_co_encadreur': encadrements_co_encadreur
+            }
+    
+    elif critere1 == 'Projet':
+        # Nombre total des projets
+        total_projets = Projet.objects.all().count()
+        
+        data = {
+            'total_projets': total_projets
+        }
+        
+        if critere2 == 'chercheur':
+            # Récupérer le nom et prénom du chercheur
+            chercheur_nom = request.data.get('nom') or request.GET.get('nom')
+            chercheur_prenom = request.data.get('prenom') or request.GET.get('prenom')
+            
+            # Récupérer l'ID du chercheur
+            chercheur = Chercheur.objects.get(nom_chercheur=chercheur_nom, prenom_chercheur=chercheur_prenom)
+            
+            # Récupérer les projets associés au chercheur
+            projets = chercheur.projet.all()
+            
+            # Initialiser les compteurs
+            chef_de_projet_count = 0
+            membre_projet_count = 0
+            
+            # Compter les projets où le chercheur est chef de projet ou membre
+            for projet in projets:
+                if projet.chef_de_projet == f"{chercheur_nom} {chercheur_prenom}":
+                    chef_de_projet_count += 1
+                else:
+                    membre_projet_count += 1
+            
+            data['chef_de_projet_count'] = chef_de_projet_count
+            data['membre_projet_count'] = membre_projet_count
+        
+        
 
-            serializer = self.get_serializer(projet)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:  # User is an assistant
-            members = data.get('members', [])
-            if not members:
-                return Response({"error": "At least one member should be specified"},
-                                status=status.HTTP_400_BAD_REQUEST)
+            
+    return Response(data)
 
-            existing_projet = Projet.objects.filter(titre_projet=projet_data['titre_projet']).first()
-
-            if existing_projet:
-                # If the project exists, establish relationships with specified members
-                for member_name in members:
-                    try:
-                        chercheur = Chercheur.objects.get(nom_chercheur=member_name.split()[0],
-                                                          prenom_chercheur=member_name.split()[1])
-                        if not ChecheursProjets.objects.filter(id_chercheur_id=chercheur.id_chercheur,
-                                                               id_projet_id=existing_projet.id_projet).exists():
-                            with connection.cursor() as cursor:
-                                cursor.execute(
-                                    "INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)",
-                                    [chercheur.id_chercheur, existing_projet.id_projet])
-                    except Chercheur.DoesNotExist:
-                        return Response({"error": f"Chercheur '{member_name}' does not exist"},
-                                        status=status.HTTP_400_BAD_REQUEST)
-            else:
-                # If the project doesn't exist, create it and establish relationships with specified members
-                projet_serializer = self.get_serializer(data=projet_data)
-                projet_serializer.is_valid(raise_exception=True)
-                existing_projet = projet_serializer.save()
-
-                for member_name in members:
-                    member_name = member_name.strip()  # Remove extra spaces
-                    member_parts = member_name.split()
-                    if len(member_parts) < 2:
-                        return Response({"error": f"Invalid member name: {member_name}"},
-                                        status=status.HTTP_400_BAD_REQUEST)
-
-                    first_name = member_parts[0]
-                    last_name = member_parts[1]
-
-                    try:
-                        # Searching for the chercheur using both first name and last name
-                        chercheur = Chercheur.objects.get(nom_chercheur=first_name, prenom_chercheur=last_name)
-                        with connection.cursor() as cursor:
-                            cursor.execute(
-                                "INSERT INTO lmcs_checheursprojets (id_chercheur_id, id_projet_id) VALUES (%s, %s)",
-                                [chercheur.id_chercheur, existing_projet.id_projet])
-                    except Chercheur.DoesNotExist:
-                        return Response({"error": f"Chercheur '{member_name}' does not exist"},
-                                        status=status.HTTP_400_BAD_REQUEST)
-            serializer = self.get_serializer(existing_projet)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-# ____________________________________________________________________________________________
-
-class ProjetByChercheurAPIView(generics.ListAPIView):
-    serializer_class = ProjetSerializerByChercheur
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        # Get the chercheur_id from the authenticated user
-        chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
-        if chercheur_id:
-            # Step 1: Retrieve all project IDs associated with the chercheur
-            projet_ids = ChecheursProjets.objects.filter(id_chercheur=chercheur_id).values_list('id_projet', flat=True)
-            # Step 2: Retrieve projects corresponding to the project IDs
-            return Projet.objects.filter(id_projet__in=projet_ids)
-        else:
-            return Projet.objects.none()
-
-
-# chercheur id using authentification
-class PublicationByChercheurAPIView(generics.ListAPIView):
-    serializer_class = PublicationSerializerByChercheur
-
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        # Get the chercheur_id from the authenticated user
-        chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
-        if chercheur_id:
-            return Publication.objects.filter(id_chercheur=chercheur_id)
-        else:
-            return Publication.objects.none()
-
-
-class PublicationModifyAPIView(generics.UpdateAPIView):
-    queryset = Publication.objects.all()
-    serializer_class = PublicationSerializer
-    permission_classes = [IsAuthenticated]
-
-
-class PublicationDeleteAPIView(generics.DestroyAPIView):
-    queryset = Publication.objects.all()
-    serializer_class = PublicationSerializer
-    permission_classes = [IsAuthenticated]
-
-
-class ProjetModifyAPIView(generics.UpdateAPIView):
-    queryset = Projet.objects.all()
-    serializer_class = ProjetSerializerByChercheur
-    permission_classes = [IsAuthenticated]
-
-
-class ProjetDeleteAPIView(generics.DestroyAPIView):
-    queryset = Projet.objects.all()
-    serializer_class = ProjetSerializerByChercheur
-    permission_classes = [IsAuthenticated]
-
-
-class EncadrementByChercheurAPIView(generics.ListAPIView):
-    serializer_class = EncadrementSerializerByChercheur
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        chercheur_id = self.request.user.chercheur.id_chercheur if self.request.user.is_authenticated else None
-        if chercheur_id:
-            # Step 1: Retrieve all project IDs associated with the chercheur
-            encadrements_ids = ChecheursEncadrements.objects.filter(chercheur_id=chercheur_id).values_list(
-                'encadrement_id', flat=True)
-            # Step 2: Retrieve projects corresponding to the project IDs
-            return Encadrement.objects.filter(id_encadrement__in=encadrements_ids)
-        else:
-            return Encadrement.objects.none()
-
-
-class EncadrementModifyAPIView(generics.UpdateAPIView):
-    queryset = Encadrement.objects.all()
-    serializer_class = EncadrementSerializerByChercheur
-    permission_classes = [IsAuthenticated]
-
-
-class EncadrementDeleteAPIView(generics.DestroyAPIView):
-    queryset = Encadrement.objects.all()
-    serializer_class = EncadrementSerializerByChercheur
-    permission_classes = [IsAuthenticated]
-
-
-class ConfjournModify(generics.UpdateAPIView):
-    queryset = Conf_journal.objects.all()
-    serializer_class = Conf_JournSerializerByChercheur
-    permission_classes = [IsAuthenticated]
+  
 
 ####################################################RECHEZRCHE##################################################################
 class ChercheurSearchAPIView(generics.ListAPIView):
