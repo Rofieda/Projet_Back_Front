@@ -1103,3 +1103,10 @@ class ProjetSearchAPIView(generics.ListAPIView):
 class PublicationDetailView(generics.RetrieveAPIView):
     queryset = Publication.objects.all()
     serializer_class = PublicationDetailSerializer
+
+
+class PubDetailModifAPIview(generics.RetrieveAPIView):
+    queryset = Publication.objects.all()
+    serializer_class = PublicationModifySerializer
+    permission_classes = [IsAuthenticated]
+
