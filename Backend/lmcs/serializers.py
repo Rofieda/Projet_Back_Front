@@ -1,5 +1,5 @@
 from rest_framework import serializers 
-from .models import Chercheur , Projet , Encadrement ,Conf_journal ,Publication
+from .models import Chercheur , Projet , Encadrement ,Conf_journal ,Publication,ChecheursEncadrements
 from django.urls import reverse
 
 class ProjetListSerializer(serializers.ModelSerializer):
@@ -7,7 +7,7 @@ class ProjetListSerializer(serializers.ModelSerializer):
 
     class Meta: 
         model = Projet
-        fields = ['titre_projet', 'domaine', 'annee_debut','detail_url']
+        fields = ['titre_projet', 'domaine', 'annee_debut','annee_fin','detail_url']
 
     def get_detail_url(self, obj):
         return reverse('Projet_detail', kwargs={'pk': obj.pk})  # Generates URL for detail view
@@ -22,6 +22,15 @@ class ProjetDetailSerializer(serializers.ModelSerializer):
     def get_membre_liste(self, obj):
         membres = Chercheur.objects.filter(checheursprojets__id_projet=obj)
         return [{'nom_complet': f"{membre.nom_chercheur} {membre.prenom_chercheur}"} for membre in membres]
+     
+
+class ProjetDetailSerializerSecond(serializers.ModelSerializer):
+    
+    class Meta: 
+        model = Projet
+        fields = ['titre_projet', 'chef_de_projet', 'domaine', 'annee_debut', 'annee_fin']
+
+     
 
 
 class ProjetCreatSerializer(serializers.ModelSerializer):
@@ -41,7 +50,7 @@ class ChercheurListSerializer(serializers.ModelSerializer):
 
     class Meta: 
         model = Chercheur 
-        fields = ['nom_chercheur', 'grade_ensignement', 'email', 'equipe', 'detail_url']
+        fields = ['nom_chercheur', 'grade_recherche', 'email', 'equipe', 'detail_url']
 
     def get_detail_url(self, obj):
         return reverse('Chercheur_detail', kwargs={'pk': obj.pk})  # Generates URL for detail view
@@ -49,9 +58,32 @@ class ChercheurListSerializer(serializers.ModelSerializer):
 
 
 class EncadrementDetailSerializer(serializers.ModelSerializer):
+    chercheur1 = serializers.SerializerMethodField()
+    chercheur2 = serializers.SerializerMethodField()
+    
     class Meta: 
-        model =Encadrement
-        exclude = ['id_encadrement']
+        model = Encadrement
+        fields = ['intitule', 'type_encadrement', 'annee_debut', 'annee_fin', 'nom_prenom_etd1', 'nom_prenom_etd2', 'chercheur1', 'role_chercheur', 'chercheur2', 'role_chercheur2']
+
+    def get_chercheur1(self, obj):
+        chercheur_encadrement = ChecheursEncadrements.objects.filter(encadrement=obj).first()
+        if chercheur_encadrement:
+            chercheur = chercheur_encadrement.chercheur
+            return f"{chercheur.nom_chercheur} {chercheur.prenom_chercheur}"
+        return None
+
+    def get_chercheur2(self, obj):
+        chercheur_encadrement = ChecheursEncadrements.objects.filter(encadrement=obj).last()
+        if chercheur_encadrement:
+            chercheur = chercheur_encadrement.chercheur
+            return f"{chercheur.nom_chercheur} {chercheur.prenom_chercheur}"
+        return None
+        
+class EncadrementDetailSerializerSecond(serializers.ModelSerializer):
+    
+    class Meta: 
+        model = Encadrement
+        fields = ['intitule', 'type_encadrement', 'annee_debut', 'annee_fin', 'nom_prenom_etd1', 'nom_prenom_etd2', 'role_chercheur', 'role_chercheur2']
 
 class EncadrementCreatSerializer(serializers.ModelSerializer):
     class Meta:
@@ -104,6 +136,23 @@ class PublicationSerializer(serializers.ModelSerializer):
         fields =['annee', 'titre_publication', 'volume','lien_publie','nombre_page', 'rang_chercheur']
 
 
+class PublicationModifySerializer(serializers.ModelSerializer):
+    acronyme = serializers.SerializerMethodField()
+    chercheur = serializers.SerializerMethodField()
+    class Meta : 
+        model = Publication
+        fields =['titre_publication','annee','acronyme', 'lien_publie','chercheur' , 'rang_chercheur' , 'volume','nombre_page','citations']
+    
+    def get_chercheur(self, obj):
+        chercheur_id = obj.id_chercheur_id
+        chercheur = Chercheur.objects.get(id_chercheur=chercheur_id)
+        return f"{chercheur.nom_chercheur} {chercheur.prenom_chercheur}"
+
+    def get_acronyme(self, obj):
+        conf_journal_id = obj.Conf_Journal_id_id
+        conf_journal = Conf_journal.objects.get(Conf_Journal_id=conf_journal_id)
+        return conf_journal.acronyme
+
     
 
 
@@ -118,7 +167,7 @@ class PublicationSerializerByChercheur(serializers.ModelSerializer):
 
     class Meta:
         model = Publication
-        fields = ['titre_publication', 'conf_journal_type', 'annee','conf_journal_acronyme', 'citations','modify_url', 'delete_url']
+        fields = ['id','titre_publication', 'conf_journal_type', 'annee','conf_journal_acronyme', 'citations','modify_url', 'delete_url']
 
     def get_modify_url(self, obj):
         return reverse('publication_modify', kwargs={'pk': obj.pk})
@@ -141,7 +190,7 @@ class ProjetSerializerByChercheur(serializers.ModelSerializer):
 
     class Meta:
         model = Projet
-        fields = ['titre_projet', 'chef_de_projet', 'domaine', 'annee_debut', 'annee_fin', 'modify_url', 'delete_url']
+        fields = ['id_projet','titre_projet', 'domaine', 'annee_debut', 'annee_fin', 'modify_url', 'delete_url']
 
     def get_modify_url(self, obj):
         return reverse('projet_modify', kwargs={'pk': obj.pk})
@@ -150,14 +199,13 @@ class ProjetSerializerByChercheur(serializers.ModelSerializer):
         return reverse('projet_delete', kwargs={'pk': obj.pk})
     
 
-
 class EncadrementSerializerByChercheur(serializers.ModelSerializer):
     modify_url = serializers.SerializerMethodField()
     delete_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Encadrement
-        fields = ['intitule', 'type_encadrement', 'annee_debut', 'annee_fin', 'modify_url', 'delete_url']
+        fields = ['id_encadrement','intitule', 'type_encadrement', 'annee_debut', 'annee_fin', 'modify_url', 'delete_url']
 
     def get_modify_url(self, obj):
         return reverse('encadrement_modify', kwargs={'pk': obj.pk})
@@ -173,67 +221,4 @@ class Conf_JournSerializerByChercheur(serializers.ModelSerializer):
 
 
 
-#############################################RECHERCHE######################################################
-class ChercheurSearchSerializer(serializers.ModelSerializer):
-    detail_url = serializers.SerializerMethodField()
-    class Meta:
-        model = Chercheur
-        fields = ['nom_chercheur', 'prenom_chercheur', 'grade_ensignement', 'email', 'projet' ,'detail_url']
-
-    def get_detail_url(self, obj):
-        return reverse('Chercheur_detail', kwargs={'pk': obj.pk})
-
-
-class PublicationSearchSerializer(serializers.ModelSerializer):
-    p_type = serializers.SerializerMethodField()
-    acronyme = serializers.SerializerMethodField()
-    detail_url = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Publication
-        fields = ['titre_publication', 'p_type', 'annee', 'acronyme', 'citations', 'detail_url']
-
-    def get_p_type(self, obj):
-        return obj.Conf_Journal_id.p_type if obj.Conf_Journal_id else None
-
-    def get_acronyme(self, obj):
-        return obj.Conf_Journal_id.acronyme if obj.Conf_Journal_id else None
-
-    def get_detail_url(self, obj):
-        return reverse('publication_detail', kwargs={'pk': obj.pk})
-
-class EncadrementSearchSerializer(serializers.ModelSerializer):
-    detail_url = serializers.SerializerMethodField()
-    class Meta:
-        model = Encadrement
-        fields = ['intitule', 'type_encadrement',  'annee_debut','annee_fin' , 'detail_url']
-
-    def get_detail_url(self, obj):
-        return reverse('Encadrement_detail', kwargs={'pk': obj.pk})
-
-
-class ProjetSearchSerializer(serializers.ModelSerializer):
-    detail_url = serializers.SerializerMethodField()
-    class Meta:
-        model = Projet
-        fields = ['titre_projet', 'annee_debut', 'annee_fin' , 'detail_url']
-
-    def get_detail_url(self, obj):
-        return reverse('Projet_detail', kwargs={'pk': obj.pk})
-
-class PublicationDetailSerializer(serializers.ModelSerializer):
-    acronyme = serializers.CharField(source='Conf_Journal_id.acronyme', read_only=True)
-    nom = serializers.CharField(source='Conf_Journal_id.nom', read_only=True)
-    p_type = serializers.CharField(source='Conf_Journal_id.p_type', read_only=True)
-    periodicite = serializers.CharField(source='Conf_Journal_id.periodicite', read_only=True)
-    lien = serializers.CharField(source='Conf_Journal_id.lien', read_only=True)
-    core_classification = serializers.CharField(source='Conf_Journal_id.core_classification', read_only=True)
-    scimago_classification = serializers.CharField(source='Conf_Journal_id.scimago_classification', read_only=True)
-    qualis_classification = serializers.CharField(source='Conf_Journal_id.qualis_classification', read_only=True)
-    dgrsdt_classification = serializers.CharField(source='Conf_Journal_id.dgrsdt_classification', read_only=True)
-
-    class Meta:
-        model = Publication
-        fields = ['titre_publication', 'acronyme', 'nom', 'p_type', 'periodicite', 'lien', 'core_classification',
-                  'scimago_classification', 'qualis_classification', 'dgrsdt_classification', 'annee', 'volume',
-                  'citations', 'lien_publie', 'nombre_page', 'rang_chercheur']
+#----------------------- Test pour projet --------------------------------------------
