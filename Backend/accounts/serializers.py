@@ -1,6 +1,8 @@
 
 import json
 from dataclasses import field
+
+from lmcs.models import Chercheur
 from .models import User
 from rest_framework import serializers
 from string import ascii_lowercase, ascii_uppercase
@@ -17,6 +19,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
 
 
@@ -63,10 +66,11 @@ class LoginSerializer(serializers.ModelSerializer):
     access_token = serializers.CharField(max_length=255, read_only=True)
     refresh_token = serializers.CharField(max_length=255, read_only=True)
     role = serializers.CharField(max_length=20, read_only=True)
-
+    id = serializers.IntegerField(read_only=True)  # Add id field
+    chercheur_id = serializers.IntegerField(read_only=True)
     class Meta:
         model = User
-        fields = ['email', 'password', 'full_name', 'access_token', 'refresh_token' , 'role']
+        fields = ['email', 'password', 'full_name', 'access_token', 'refresh_token' , 'role','id', 'chercheur_id']
 
     def validate(self, attrs):
         email = attrs.get('email')
@@ -80,12 +84,16 @@ class LoginSerializer(serializers.ModelSerializer):
         user.save(update_fields=['last_login'])
 
         tokens = user.tokens()
+        id = user.id
+        chercheur_id = user.chercheur_id
         return {
             'email': user.email,
             'role': user.role,
             'full_name': user.get_full_name,  # Corrected usage
             "access_token": str(tokens.get('access')),
-            "refresh_token": str(tokens.get('refresh'))
+            "refresh_token": str(tokens.get('refresh')),
+            'id': id,
+            'chercheur_id': chercheur_id
         }
 
 
@@ -159,15 +167,18 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'email', 'first_name', 'last_name', 'role']
 '''
 class UserSerializer(serializers.HyperlinkedModelSerializer):
-    delete_url = serializers.SerializerMethodField()
+    bloquer_url = serializers.SerializerMethodField()
+    is_active_display = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'role', 'delete_url']
+        fields = ['email', 'first_name', 'last_name', 'role', 'is_active_display', 'bloquer_url']
 
-    def get_delete_url(self, obj):
-        return reverse('delete_user', kwargs={'pk': obj.pk})
+    def get_bloquer_url(self, obj):
+        return reverse('gestion-user', kwargs={'pk': obj.pk})
 
+    def get_is_active_display(self, obj):
+        return "Actif" if obj.is_active else "Bloqué"
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
@@ -187,7 +198,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
             relative_link = reverse('reset-password-confirm', kwargs={'uidb64': uidb64, 'token': token})
             abslink = f"http://{current_site}{relative_link}"
             print(abslink)
-            email_body = f"Hi {user.first_name} utiliser ce lien pour réinsialiser votre mot de passe {abslink}"
+            email_body = f"Hi {user.first_name} Nous vous avons envoyé les codes pour réinitialiser votre mot de passe sous forme http://127.0.0.1:8000/api/v1/auth/password-reset-confirm/<code de confirmation>/<code de autorisation>/   copie code de confirmation et code de confirmation pour se identifier et confirmer la rénisialisation de mot de passe   {abslink}"
             data = {
                 'email_body': email_body,
                 'email_subject': "Réinitialiser votre mot de passe",
@@ -225,3 +236,28 @@ class SetNewPasswordSerializer(serializers.Serializer):
             return user
         except Exception as e:
             return AuthenticationFailed("Le lien est invalide ou a expiré")
+
+class LogoutUserSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField()
+
+    error_messages = {
+        'bad_token': 'Token is expired or invalid'
+    }
+
+    def validate(self, attrs):
+        self.token = attrs.get('refresh_token')
+        return attrs
+
+    def save(self, **kwargs):
+        try:
+            token = RefreshToken(self.token)
+            token.blacklist()
+            return "Déconnexion réussie."  # Success message
+        except TokenError:
+            raise ValidationError(self.error_messages['bad_token'])
+
+
+class ChercheurSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Chercheur
+        fields = '__all__'
