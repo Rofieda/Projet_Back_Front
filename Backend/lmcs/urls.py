@@ -1,9 +1,11 @@
-from django.urls import path , include 
-from rest_framework.routers import DefaultRouter 
-from . import views 
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from . import views
+from .views import PublicationDetailView, ChercheurPlusCite, PublicationPlusCite, ChercheursPlusCite, \
+    voir_profil_autre_chercheur, ChercheurprofileAPIView, PublicationprofileAPIView, ChercheurListAPIView, \
+    PublicationssListAPIView, Publicationprofil2eAPIView, EncadrementssListAPIView, \
+    ProjetsListAPIView, ProjetDetailsAPIView, MEncadrementDetailAPIview
 
-#router = DefaultRouter()
-#router.register(r'chercheurs', ProjetsListCreateAPIView)
 
 urlpatterns =[
    
@@ -38,11 +40,31 @@ urlpatterns =[
     path('encadrement/<int:pk>/delete/', views.EncadrementDeleteAPIView.as_view(), name='encadrement_delete'),
 
     #Recherche:
-    path('chercheur-search/', views.ChercheurSearchAPIView.as_view(), name='chercheur-search'),
+   path('chercheur-search/', views.ChercheurSearchAPIView.as_view(), name='chercheur-search'),
+    path('chercheur-generalesearch/', views.ChercheurSearchGAPIView.as_view(), name='chercheur-gsearch'),
+    path('publications/search/', views.PublicationSearchAPIView.as_view(), name='publication_search'),
+    path('publications/gsearch/', views.PublicationSearchGAPIView.as_view(), name='publication_gsearch'),
     path('encadrements/search/', views.EncadrementSearchAPIView.as_view(), name='encadrement_search'),
+    path('encadrements/genesearch/', views.EncadrementSearchGAPIView.as_view(), name='encadrement_gsearch'),
     path('projets/search/', views.ProjetSearchAPIView.as_view(), name='projet_search'),
-   #publication_detail:
+    path('projets/gensearch/', views.ProjetSearchGAPIView.as_view(), name='projet_gsearch'),
     path('publication/<int:pk>/', views.PublicationDetailView.as_view(), name='publication_detail'),
+      path('chercheur-plus-cite/', ChercheurPlusCite.as_view(), name='chercheur_plus_cite'),
+    path('voir_profil_autre_chercheur/', voir_profil_autre_chercheur, name='voir_profil_autre_chercheur'),
+    path('publication-plus-cite/', PublicationPlusCite.as_view(), name='publication_plus_cite'),
+    path('chercheurs-plus-cite/', ChercheursPlusCite.as_view(), name='chercheurs_plus_cite'),
+    path('chercheur/<int:id_chercheur>/', ChercheurprofileAPIView.as_view(), name='chercheur-detail'),
+    path('publicationprofile/<int:id>/', PublicationprofileAPIView.as_view(), name='publication-detail'),
+    path('publicationprofile2/<int:id>/', Publicationprofil2eAPIView.as_view(), name='publication-detail'),
+
+     path('chercheurs/', ChercheurListAPIView.as_view(), name='chercheurs_list'),
+     path('publicationslist/', PublicationssListAPIView.as_view(), name='publication_list'),
+     path('encadrements/<int:id_encadrement>/',MEncadrementDetailAPIview.as_view(), name='encadrement-details'),
+     path('encadrements/', EncadrementssListAPIView.as_view(), name='encadrements-list'),
+     path('projetslists/', ProjetsListAPIView.as_view(), name='projets-list'),
+     path('projets/<int:id_projet>/', ProjetDetailsAPIView.as_view(), name='projet-details'),
+     path('MEncadrementsList/<int:pk>/', views.MEncadrementDetailAPIview.as_view(), name='MEncadrement_detail'),  # Encadrement detail API endpoint
+
 ]
     
 
