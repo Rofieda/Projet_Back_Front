@@ -332,14 +332,16 @@ class PublicationCiteSerializer2(serializers.ModelSerializer):
     scimago_classification = serializers.CharField(source='Conf_Journal_id.scimago_classification', read_only=True)
     qualis_classification = serializers.CharField(source='Conf_Journal_id.qualis_classification', read_only=True)
     dgrsdt_classification = serializers.CharField(source='Conf_Journal_id.dgrsdt_classification', read_only=True)
+    maison_edition = serializers.CharField(source='Conf_Journal_id.maison_edition', read_only=True)
     chercheur_nom = serializers.CharField(source='id_chercheur.nom_chercheur', read_only=True)
     chercheur_prenom = serializers.CharField(source='id_chercheur.prenom_chercheur',read_only=True)
+    
 
     class Meta:
         model = Publication
         fields = [ 'id','titre_publication', 'acronyme', 'nom', 'p_type', 'periodicite', 'lien', 'core_classification',
                   'scimago_classification', 'qualis_classification', 'dgrsdt_classification', 'annee', 'volume',
-                  'citations', 'lien_publie', 'nombre_page','chercheur_prenom','chercheur_nom','rang_chercheur']
+                  'citations', 'lien_publie', 'nombre_page','chercheur_prenom','chercheur_nom','rang_chercheur','maison_edition' ]
 
 
 
