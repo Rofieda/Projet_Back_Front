@@ -221,4 +221,166 @@ class Conf_JournSerializerByChercheur(serializers.ModelSerializer):
 
 
 
-#----------------------- Test pour projet --------------------------------------------
+#----------------------- MERIEM --------------------------------------------
+class MEncadrementDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Encadrement
+        exclude = ['id_encadrement']
+        
+class ChercheurSearchSerializer(serializers.ModelSerializer):
+    detail_url = serializers.SerializerMethodField()
+    class Meta:
+        model = Chercheur
+        fields = [  'id_chercheur','nom_chercheur', 'prenom_chercheur', 'grade_ensignement', 'email', 'equipe' ,'detail_url']
+
+    def get_detail_url(self, obj):
+        return reverse('Chercheur_detail', kwargs={'pk': obj.pk})
+
+
+class PublicationSearchSerializer(serializers.ModelSerializer):
+    p_type = serializers.SerializerMethodField()
+    acronyme = serializers.SerializerMethodField()
+    chercheur_nom = serializers.CharField(source='id_chercheur.nom_chercheur', read_only=True)
+    chercheur_prenom = serializers.CharField(source='id_chercheur.prenom_chercheur',read_only=True)
+    detail_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Publication
+        fields = [ 'id','titre_publication', 'p_type', 'annee', 'acronyme', 'rang_chercheur','citations','chercheur_prenom', 'chercheur_nom','detail_url']
+
+    def get_p_type(self, obj):
+        return obj.Conf_Journal_id.p_type if obj.Conf_Journal_id else None
+
+    def get_acronyme(self, obj):
+        return obj.Conf_Journal_id.acronyme if obj.Conf_Journal_id else None
+
+    def get_detail_url(self, obj):
+        return reverse('publication_detail', kwargs={'pk': obj.pk})
+
+class EncadrementSearchSerializer(serializers.ModelSerializer):
+    detail_url = serializers.SerializerMethodField()
+    class Meta:
+        model = Encadrement
+        fields = ['id_encadrement','intitule', 'type_encadrement',  'annee_debut','annee_fin' , 'detail_url']
+
+    def get_detail_url(self, obj):
+        return reverse('MEncadrement_detail', kwargs={'pk': obj.pk})
+
+
+class ProjetSearchSerializer(serializers.ModelSerializer):
+    detail_url = serializers.SerializerMethodField()
+    class Meta:
+        model = Projet
+        fields = ['id_projet','titre_projet', 'annee_debut','domaine','annee_fin' , 'detail_url']
+
+    def get_detail_url(self, obj):
+        return reverse('Projet_detail', kwargs={'pk': obj.pk})
+
+class PublicationDetailSerializer(serializers.ModelSerializer):
+    acronyme = serializers.CharField(source='Conf_Journal_id.acronyme', read_only=True)
+    nom = serializers.CharField(source='Conf_Journal_id.nom', read_only=True)
+    p_type = serializers.CharField(source='Conf_Journal_id.p_type', read_only=True)
+    periodicite = serializers.CharField(source='Conf_Journal_id.periodicite', read_only=True)
+    lien = serializers.CharField(source='Conf_Journal_id.lien', read_only=True)
+    core_classification = serializers.CharField(source='Conf_Journal_id.core_classification', read_only=True)
+    scimago_classification = serializers.CharField(source='Conf_Journal_id.scimago_classification', read_only=True)
+    qualis_classification = serializers.CharField(source='Conf_Journal_id.qualis_classification', read_only=True)
+    dgrsdt_classification = serializers.CharField(source='Conf_Journal_id.dgrsdt_classification', read_only=True)
+    chercheur_nom = serializers.CharField(source='id_chercheur.nom_chercheur', read_only=True)  # Ajout du nom du chercheur
+    chercheur_prenom = serializers.CharField(source='id_chercheur.prenom_chercheur', read_only=True)  # Ajout du prénom du chercheur
+
+    class Meta:
+        model = Publication
+        fields = ['id','titre_publication', 'acronyme', 'nom', 'p_type', 'periodicite', 'lien', 'core_classification',
+                  'scimago_classification', 'qualis_classification', 'dgrsdt_classification', 'annee', 'volume',
+                  'citations', 'lien_publie', 'nombre_page', 'rang_chercheur', 'chercheur_nom', 'chercheur_prenom']
+
+#######################################################"Chercheur_Plus_Cite#######################################################
+
+class ChercheurProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Chercheur
+        fields = ['id_chercheur', 'nom_chercheur', 'prenom_chercheur', 'etablissement', 'diplome', 'email', 'tel', 'dblp_lien', 'research_gate_lien', 'google_scholar_lien', 'site_web', 'grade_ensignement', 'grade_recherche', 'Qualite', 'h_index', 'sexe', 'equipe', 'statut']
+
+class PublicationCiteSerializer(serializers.ModelSerializer):
+    acronyme = serializers.CharField(source='Conf_Journal_id.acronyme', read_only=True)
+    nom = serializers.CharField(source='Conf_Journal_id.nom', read_only=True)
+    p_type = serializers.CharField(source='Conf_Journal_id.p_type', read_only=True)
+    periodicite = serializers.CharField(source='Conf_Journal_id.periodicite', read_only=True)
+    lien = serializers.CharField(source='Conf_Journal_id.lien', read_only=True)
+    core_classification = serializers.CharField(source='Conf_Journal_id.core_classification', read_only=True)
+    scimago_classification = serializers.CharField(source='Conf_Journal_id.scimago_classification', read_only=True)
+    qualis_classification = serializers.CharField(source='Conf_Journal_id.qualis_classification', read_only=True)
+    dgrsdt_classification = serializers.CharField(source='Conf_Journal_id.dgrsdt_classification', read_only=True)
+
+
+    class Meta:
+        model = Publication
+        fields = [ 'id','titre_publication', 'acronyme', 'nom', 'p_type', 'periodicite', 'lien', 'core_classification',
+                  'scimago_classification', 'qualis_classification', 'dgrsdt_classification', 'annee', 'volume',
+                  'citations', 'lien_publie', 'nombre_page']
+
+class ChercheurNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Chercheur
+        fields = ['nom_chercheur', 'prenom_chercheur']
+
+
+class PublicationCiteSerializer2(serializers.ModelSerializer):
+    acronyme = serializers.CharField(source='Conf_Journal_id.acronyme', read_only=True)
+    nom = serializers.CharField(source='Conf_Journal_id.nom', read_only=True)
+    p_type = serializers.CharField(source='Conf_Journal_id.p_type', read_only=True)
+    periodicite = serializers.CharField(source='Conf_Journal_id.periodicite', read_only=True)
+    lien = serializers.CharField(source='Conf_Journal_id.lien', read_only=True)
+    core_classification = serializers.CharField(source='Conf_Journal_id.core_classification', read_only=True)
+    scimago_classification = serializers.CharField(source='Conf_Journal_id.scimago_classification', read_only=True)
+    qualis_classification = serializers.CharField(source='Conf_Journal_id.qualis_classification', read_only=True)
+    dgrsdt_classification = serializers.CharField(source='Conf_Journal_id.dgrsdt_classification', read_only=True)
+    chercheur_nom = serializers.CharField(source='id_chercheur.nom_chercheur', read_only=True)
+    chercheur_prenom = serializers.CharField(source='id_chercheur.prenom_chercheur',read_only=True)
+
+    class Meta:
+        model = Publication
+        fields = [ 'id','titre_publication', 'acronyme', 'nom', 'p_type', 'periodicite', 'lien', 'core_classification',
+                  'scimago_classification', 'qualis_classification', 'dgrsdt_classification', 'annee', 'volume',
+                  'citations', 'lien_publie', 'nombre_page','chercheur_prenom','chercheur_nom','rang_chercheur']
+
+
+
+
+
+class ChercheurSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Chercheur
+        fields = ['nom_chercheur', 'prenom_chercheur']
+
+class EncadrementSerializer(serializers.ModelSerializer):
+    chercheurs = serializers.SerializerMethodField()
+
+    def get_chercheurs(self, obj):
+        chercheurs = ChecheursEncadrements.objects.filter(encadrement=obj)
+        chercheurs_list = []
+        for ce in chercheurs:
+            chercheur_serializer = ChercheurSerializer(ce.chercheur)
+            chercheurs_list.append(chercheur_serializer.data)
+        return chercheurs_list
+
+    class Meta:
+        model = Encadrement
+        fields = ['id_encadrement', 'type_encadrement', 'intitule', 'annee_debut', 'annee_fin', 'nom_prenom_etd1', 'nom_prenom_etd2', 'role_chercheur', 'role_chercheur2', 'chercheurs']
+class ProjetSerializer(serializers.ModelSerializer):
+    chercheurs = serializers.SerializerMethodField()
+
+    def get_chercheurs(self, obj):
+        chercheurs = ChecheursProjets.objects.filter(id_projet=obj)
+        chercheurs_list = []
+        for cp in chercheurs:
+            chercheur_serializer = ChercheurSerializer(cp.id_chercheur)
+            chercheurs_list.append(chercheur_serializer.data)
+        return chercheurs_list
+
+    class Meta:
+        model = Projet
+        fields = ['id_projet', 'titre_projet', 'chef_de_projet', 'domaine', 'annee_debut', 'annee_fin', 'chercheurs']
+
+
