@@ -296,7 +296,7 @@ class PublicationDetailSerializer(serializers.ModelSerializer):
 class ChercheurProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chercheur
-        fields = ['id_chercheur', 'nom_chercheur', 'prenom_chercheur', 'etablissement', 'diplome', 'email', 'tel', 'dblp_lien', 'research_gate_lien', 'google_scholar_lien', 'site_web', 'grade_ensignement', 'grade_recherche', 'Qualite', 'h_index', 'sexe', 'equipe', 'statut']
+        fields = ['id_chercheur', 'nom_chercheur', 'prenom_chercheur', 'etablissement', 'diplome', 'email', 'tel', 'dblp_lien', 'research_gate_lien', 'google_scholar_lien', 'site_web', 'grade_ensignement', 'grade_recherche', 'Qualite', 'h_index', 'sexe', 'equipe', 'statut','orcid']
 
 class PublicationCiteSerializer(serializers.ModelSerializer):
     acronyme = serializers.CharField(source='Conf_Journal_id.acronyme', read_only=True)
