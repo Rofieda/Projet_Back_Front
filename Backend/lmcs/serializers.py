@@ -222,10 +222,7 @@ class Conf_JournSerializerByChercheur(serializers.ModelSerializer):
 
 
 #----------------------- MERIEM --------------------------------------------
-class MEncadrementDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Encadrement
-        exclude = ['id_encadrement']
+
         
 class ChercheurSearchSerializer(serializers.ModelSerializer):
     detail_url = serializers.SerializerMethodField()
@@ -264,7 +261,7 @@ class EncadrementSearchSerializer(serializers.ModelSerializer):
         fields = ['id_encadrement','intitule', 'type_encadrement',  'annee_debut','annee_fin' , 'detail_url']
 
     def get_detail_url(self, obj):
-        return reverse('MEncadrement_detail', kwargs={'pk': obj.pk})
+        return reverse('Encadrement_detail', kwargs={'pk': obj.pk})
 
 
 class ProjetSearchSerializer(serializers.ModelSerializer):
