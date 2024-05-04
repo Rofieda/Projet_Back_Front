@@ -4,7 +4,7 @@ from . import views
 from .views import PublicationDetailView, ChercheurPlusCite, PublicationPlusCite, ChercheursPlusCite, \
     voir_profil_autre_chercheur, ChercheurprofileAPIView, PublicationprofileAPIView, ChercheurListAPIView, \
     PublicationssListAPIView, Publicationprofil2eAPIView, EncadrementssListAPIView, \
-    ProjetsListAPIView, ProjetDetailsAPIView, MEncadrementDetailAPIview
+    ProjetsListAPIView, ProjetDetailsAPIView
 
 
 urlpatterns =[
@@ -63,7 +63,7 @@ urlpatterns =[
      path('encadrements/', EncadrementssListAPIView.as_view(), name='encadrements-list'),
      path('projetslists/', ProjetsListAPIView.as_view(), name='projets-list'),
      path('projets/<int:id_projet>/', ProjetDetailsAPIView.as_view(), name='projet-details'),
-     path('MEncadrementsList/<int:pk>/', views.MEncadrementDetailAPIview.as_view(), name='MEncadrement_detail'),  # Encadrement detail API endpoint
+     # Encadrement detail API endpoint
 
 ]
     
