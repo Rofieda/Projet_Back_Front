@@ -10,8 +10,7 @@ from .serializers import ProjetListSerializer, EncadrementSerializerByChercheur,
      ChercheurDetailSerializer, ChercheurListSerializer, ConfJournalListSerializer, \
     ConfJournalDetailSerializer, PublicationSearchSerializer, EncadrementSearchSerializer, ProjetSearchSerializer, \
     Conf_JournSerializerByChercheur, PublicationDetailSerializer, ChercheurProfileSerializer, PublicationCiteSerializer, \
-    ChercheurNameSerializer, PublicationCiteSerializer2, EncadrementSerializer, ProjetSerializer, \
-    MEncadrementDetailSerializer
+    ChercheurNameSerializer, PublicationCiteSerializer2, EncadrementSerializer, ProjetSerializer
 
 from rest_framework import generics, permissions, status
 from django.contrib.auth import authenticate, login, logout
@@ -967,9 +966,7 @@ def get_statistics(request):
 
 ####################################################RECHEZRCHE##################################################################
 ####################################################MERIEM##################################################################
-class MEncadrementDetailAPIview(generics.RetrieveAPIView):
-    queryset = Encadrement.objects.all()
-    serializer_class = MEncadrementDetailSerializer
+
 
 class ChercheurSearchAPIView(generics.ListAPIView):
     serializer_class = ChercheurSearchSerializer
