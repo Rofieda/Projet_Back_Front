@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from .models import Projet, Chercheur, Encadrement, Conf_journal, Publication, ChecheursEncadrements, ChecheursProjets
 from rest_framework import viewsets
@@ -6,9 +7,12 @@ from rest_framework.response import Response
 from .serializers import ProjetListSerializer, EncadrementSerializerByChercheur, ProjetSerializerByChercheur, \
     PublicationSerializerByChercheur, PublicationSerializer, ConfJournalCreat, EncadrementCreatSerializer, \
     ProjetCreatSerializer, ProjetDetailSerializer, ChercheurCreat, EncadrementListSerializer, \
-    EncadrementDetailSerializer, ChercheurDetailSerializer, ChercheurListSerializer, ConfJournalListSerializer, \
+     ChercheurDetailSerializer, ChercheurListSerializer, ConfJournalListSerializer, \
     ConfJournalDetailSerializer, PublicationSearchSerializer, EncadrementSearchSerializer, ProjetSearchSerializer, \
-    Conf_JournSerializerByChercheur
+    Conf_JournSerializerByChercheur, PublicationDetailSerializer, ChercheurProfileSerializer, PublicationCiteSerializer, \
+    ChercheurNameSerializer, PublicationCiteSerializer2, EncadrementSerializer, ProjetSerializer, \
+    MEncadrementDetailSerializer
+
 from rest_framework import generics, permissions, status
 from django.contrib.auth import authenticate, login, logout
 from rest_framework.authentication import TokenAuthentication
@@ -22,6 +26,16 @@ from rest_framework.authentication import SessionAuthentication, TokenAuthentica
 from rest_framework.permissions import IsAuthenticated
 from .serializers import ChercheurSearchSerializer
 from rest_framework import generics, permissions
+from django.db.models import Q
+from django.db.models import Count
+from django.utils import timezone
+from django.db.models import Max
+from rest_framework.generics import RetrieveAPIView
+import datetime
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.shortcuts import render
+
 
 
 #____________________________________________________________________________________________
@@ -952,9 +966,14 @@ def get_statistics(request):
   
 
 ####################################################RECHEZRCHE##################################################################
+####################################################MERIEM##################################################################
+class MEncadrementDetailAPIview(generics.RetrieveAPIView):
+    queryset = Encadrement.objects.all()
+    serializer_class = MEncadrementDetailSerializer
+
 class ChercheurSearchAPIView(generics.ListAPIView):
     serializer_class = ChercheurSearchSerializer
-    permission_classes = [IsAuthenticated]
+   # permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         queryset = Chercheur.objects.all()
@@ -963,8 +982,6 @@ class ChercheurSearchAPIView(generics.ListAPIView):
         grade_ensignement = self.request.GET.get('grade_ensignement')
         if grade_ensignement:
             queryset = queryset.filter(grade_ensignement=grade_ensignement)
-
-
 
         # Filter by établissement
         etablissement = self.request.GET.get('etablissement')
@@ -981,19 +998,84 @@ class ChercheurSearchAPIView(generics.ListAPIView):
         if sexe:
             queryset = queryset.filter(sexe=sexe)
 
+        queryset = queryset.distinct()
         return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        if not queryset.exists():
-            return Response({"detail": "Aucun résultat trouvé pour les filtres spécifiés."},status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        if len(serializer.data) == 0:
+            # If queryset is empty, return an empty response with status 204 (No Content)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            # If queryset is not empty, return the serialized data with status 200 (OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+#recherche des chercheurs generale :
+class ChercheurSearchGAPIView(generics.ListAPIView):
+    serializer_class =  ChercheurSearchSerializer
+    #permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        queryset = Chercheur.objects.all()
 
+        search_query = self.request.query_params.get('q')
+        if search_query:
+            queryset = queryset.filter(
+                Q(nom_chercheur__icontains=search_query) |
+                Q(prenom_chercheur__icontains=search_query) |
+                Q(etablissement__icontains=search_query) |
+                Q(diplome__icontains=search_query) |
+                Q(email__icontains=search_query) |
+                Q(tel__icontains=search_query) |
+                Q(dblp_lien__icontains=search_query) |
+                Q(research_gate_lien__icontains=search_query) |
+                Q(google_scholar_lien__icontains=search_query) |
+                Q(site_web__icontains=search_query) |
+                Q(grade_ensignement__icontains=search_query) |
+                Q(grade_recherche__icontains=search_query) |
+                Q(Qualite__icontains=search_query) |
+                Q(h_index__icontains=search_query) |
+                Q(sexe__icontains=search_query) |
+                Q(equipe__icontains=search_query) |
+                Q(statut__icontains=search_query) |
+                Q(encadrements__intitule__icontains=search_query) |
+                Q(encadrements__type_encadrement__icontains=search_query) |
+                Q(encadrements__role_chercheur__icontains=search_query) |
+                Q(encadrements__role_chercheur2__icontains=search_query) |
+                Q(encadrements__nom_prenom_etd1__icontains=search_query) |
+                Q(encadrements__nom_prenom_etd2__icontains=search_query) |
+                Q(projet__titre_projet__icontains=search_query) |
+                Q(projet__chef_de_projet__icontains=search_query) |
+                Q(conf_journals__nom__icontains=search_query) |
+                Q(conf_journals__acronyme__icontains=search_query) |
+                Q(conf_journals__p_type__icontains=search_query) |
+                Q(conf_journals__lien__icontains=search_query) |
+                Q(conf_journals__core_classification__icontains=search_query) |
+                Q(conf_journals__scimago_classification__icontains=search_query) |
+                Q(conf_journals__qualis_classification__icontains=search_query) |
+                Q(conf_journals__dgrsdt_classification__icontains=search_query) |
+                Q(publication__titre_publication__icontains=search_query) |
+                Q(publication__citations__icontains=search_query) |
+                Q(publication__lien_publie__icontains=search_query) |
+                Q(publication__rang_chercheur__icontains=search_query)
+
+            )
+        queryset = queryset.distinct()
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        if len(serializer.data) == 0:
+            # If queryset is empty, return an empty response with status 204 (No Content)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            # If queryset is not empty, return the serialized data with status 200 (OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+#publication par filtre :
 class PublicationSearchAPIView(generics.ListAPIView):
     serializer_class = PublicationSearchSerializer
-    permission_classes = [IsAuthenticated]
+   # permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         queryset = Publication.objects.all()
@@ -1018,20 +1100,71 @@ class PublicationSearchAPIView(generics.ListAPIView):
         if mot_cle:
             queryset = queryset.filter(titre_publication__icontains=mot_cle)
 
+
+
         return queryset
 
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        if not queryset.exists():
-            return Response({"detail": "Aucun résultat trouvé pour les filtres spécifiés."},status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        if len(serializer.data) == 0:
+            # If queryset is empty, return an empty response with status 204 (No Content)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            # If queryset is not empty, return the serialized data with status 200 (OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+#publication generale : class PublicationSearchAPIView(generics.ListAPIView):
+class PublicationSearchGAPIView(generics.ListAPIView):
+    serializer_class = PublicationSearchSerializer
+    #permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Publication.objects.all()
+
+        search_query = self.request.query_params.get('q')
+        if search_query:
+            queryset = queryset.filter(
+                Q(titre_publication__icontains=search_query) |
+                Q(volume__icontains=search_query) |
+                Q(citations__icontains=search_query) |
+                Q(lien_publie__icontains=search_query) |
+                Q(nombre_page__icontains=search_query) |
+                Q(rang_chercheur__icontains=search_query) |
+                Q(id_chercheur__nom_chercheur__icontains=search_query) |     # Recherche par nom de chercheur
+                Q(id_chercheur__prenom_chercheur__icontains=search_query) |  # Recherche par prénom de chercheur
+                Q(Conf_Journal_id__acronyme__icontains=search_query) |        # Recherche par acronyme de conférence
+                Q(Conf_Journal_id__nom__icontains=search_query) |             # Recherche par nom de conférence
+                Q(Conf_Journal_id__p_type__icontains=search_query) |         # Recherche par type de conférence
+                Q(Conf_Journal_id__periodicite__icontains=search_query) |    # Recherche par périodicité de conférence
+                Q(Conf_Journal_id__lien__icontains=search_query) |           # Recherche par lien de conférence
+                Q(Conf_Journal_id__core_classification__icontains=search_query) |  # Recherche par classification CORE
+                Q(Conf_Journal_id__scimago_classification__icontains=search_query) |  # Recherche par classification Scimago
+                Q(Conf_Journal_id__qualis_classification__icontains=search_query) |   # Recherche par classification Qualis
+                Q(Conf_Journal_id__dgrsdt_classification__icontains=search_query)     # Recherche par classification DGRSDT
+                # Inclure d'autres champs si nécessaire
+            )
 
 
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        if len(serializer.data) == 0:
+            # If queryset is empty, return an empty response with status 204 (No Content)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            # If queryset is not empty, return the serialized data with status 200 (OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+#recherche des encadremnnt par filtre :
 class EncadrementSearchAPIView(generics.ListAPIView):
     serializer_class = EncadrementSearchSerializer
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         queryset = Encadrement.objects.all()
@@ -1056,57 +1189,263 @@ class EncadrementSearchAPIView(generics.ListAPIView):
         if mot_cle:
             queryset = queryset.filter(intitule__icontains=mot_cle)
 
+        queryset = queryset.distinct()
+
         return queryset
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        if not queryset.exists():
-            return Response({"detail": "Aucun résultat trouvé pour les filtres spécifiés."},status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        if len(serializer.data) == 0:
+            # If queryset is empty, return an empty response with status 204 (No Content)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            # If queryset is not empty, return the serialized data with status 200 (OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
-class ProjetSearchAPIView(generics.ListAPIView):
-    serializer_class = ProjetSearchSerializer
-    permission_classes = [IsAuthenticated]
+# recherche des encadremnnt generale :
+class EncadrementSearchGAPIView(generics.ListAPIView):
+    serializer_class = EncadrementSearchSerializer
+   # permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        queryset = Encadrement.objects.all()
+
+        search_query = self.request.query_params.get('q')
+        if search_query:
+            queryset = queryset.filter(
+                Q(type_encadrement__icontains=search_query) |
+                Q(intitule__icontains=search_query) |
+                Q(role_chercheur__icontains=search_query) |
+                Q(nom_prenom_etd1__icontains=search_query) |
+                Q(nom_prenom_etd2__icontains=search_query) |
+                Q(annee_debut__icontains=search_query) |
+                Q(annee_fin__icontains=search_query) |
+                Q(role_chercheur2__icontains=search_query) |
+                Q(chercheur__nom_chercheur__icontains=search_query)
+            )
+
+        queryset = queryset.distinct()
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        if len(serializer.data) == 0:
+            # If queryset is empty, return an empty response with status 204 (No Content)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            # If queryset is not empty, return the serialized data with status 200 (OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+#recherche filtre projets :
+class ProjetSearchAPIView(generics.ListAPIView):
+    serializer_class = ProjetSearchSerializer
+    #permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Récupérer tous les projets
         queryset = Projet.objects.all()
 
-        # Filtrer par date de début
+        # Filtrer par date de début si le paramètre 'date_debut' est présent dans la requête
         date_debut = self.request.GET.get('date_debut')
         if date_debut:
             queryset = queryset.filter(annee_debut=date_debut)
 
-        # Filtrer par date de fin
+        # Filtrer par date de fin si le paramètre 'date_fin' est présent dans la requête
         date_fin = self.request.GET.get('date_fin')
         if date_fin:
             queryset = queryset.filter(annee_fin=date_fin)
 
-        # Filtrer par domaine
+        # Filtrer par domaine si le paramètre 'domaine' est présent dans la requête
         domaine = self.request.GET.get('domaine')
         if domaine:
             queryset = queryset.filter(domaine=domaine)
 
-        # Filtrer par mot-clé
+        # Filtrer par mot-clé si le paramètre 'mot_cle' est présent dans la requête
         mot_cle = self.request.GET.get('mot_cle')
         if mot_cle:
-             queryset = queryset.filter(titre_projet__icontains=mot_cle)
+            # Filtrer les projets dont le titre contient le mot-clé
+            queryset = queryset.filter(titre_projet__icontains=mot_cle)
+
+        queryset = queryset.distinct()
 
         return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        if not queryset.exists():
-            return Response({"detail": "Aucun résultat trouvé pour les filtres spécifiés."},status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        if len(serializer.data) == 0:
+            # If queryset is empty, return an empty response with status 204 (No Content)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            # If queryset is not empty, return the serialized data with status 200 (OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
+#recherche generale projets :
+class ProjetSearchGAPIView(generics.ListAPIView):
+    serializer_class = ProjetSearchSerializer
+    #permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Projet.objects.all()
+
+        search_query = self.request.query_params.get('q')
+        if search_query:
+            queryset = queryset.filter(
+                Q(titre_projet__icontains=search_query) |
+                Q(chef_de_projet__icontains=search_query) |
+                Q(domaine__icontains=search_query) |
+                Q(annee_debut__icontains=search_query) |
+                Q(chercheur__nom_chercheur__icontains=search_query)|
+                Q(annee_fin__icontains=search_query) |
+                Q(chercheur__nom_chercheur__icontains=search_query)
+            )
+
+        queryset = queryset.distinct()
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        if len(serializer.data) == 0:
+            # If queryset is empty, return an empty response with status 204 (No Content)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            # If queryset is not empty, return the serialized data with status 200 (OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 class PublicationDetailView(generics.RetrieveAPIView):
     queryset = Publication.objects.all()
     serializer_class = PublicationDetailSerializer
 
 
-class PubDetailModifAPIview(generics.RetrieveAPIView):
-    queryset = Publication.objects.all()
-    serializer_class = PublicationModifySerializer
-    permission_classes = [IsAuthenticated]
 
+class ChercheursPlusCite(APIView):
+    # permission_classes = [IsAuthenticated]
+    serializer_class = ChercheurProfileSerializer
+
+    def get(self, request):
+        # Récupérer l'année actuelle
+        current_year = datetime.datetime.now().year
+
+        # Obtenir le nombre maximal de citations pour l'année actuelle
+        max_citations = Publication.objects.filter(annee=current_year).aggregate(Max('citations'))['citations__max']
+
+        # Vérifier si des publications ont été trouvées pour l'année actuelle
+        if max_citations:
+            # Filtrer les publications de l'année actuelle avec le nombre maximal de citations
+            publications = Publication.objects.filter(annee=current_year, citations=max_citations)
+
+            # Récupérer le titre de la première publication (la plus citée)
+            titre_publication = publications.first().titre_publication
+
+            # Récupérer tous les chercheurs associés à cette publication
+            chercheurs_associés = Chercheur.objects.filter(publication__titre_publication=titre_publication)
+
+            # Sérialiser les chercheurs associés avec tous leurs attributs
+            chercheurs_serializer = self.serializer_class(chercheurs_associés, many=True)
+
+            # Extraire les IDs des chercheurs associés
+            ids_chercheurs = list(chercheurs_associés.values_list('id_chercheur', flat=True))
+
+            return Response({
+                'chercheurs': chercheurs_serializer.data,
+                'ids_chercheurs': ids_chercheurs
+            })
+        else:
+            return Response({'message': 'Aucune publication trouvée pour l\'année actuelle'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+class ChercheurPlusCite(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ChercheurProfileSerializer
+
+    def get(self, request):
+        chercheur_plus_cite = Chercheur.objects.order_by('-h_index').first()
+
+        if chercheur_plus_cite:
+            chercheur_serializer = self.serializer_class(chercheur_plus_cite)
+            return Response(chercheur_serializer.data)
+        else:
+            return Response({'message': 'Aucun chercheur trouvé'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+class PublicationPlusCite(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PublicationCiteSerializer
+
+    def get(self, request):
+        # Récupérer l'année actuelle
+        current_year = datetime.datetime.now().year
+
+        # Obtenir le nombre maximal de citations pour l'année actuelle
+        max_citations = Publication.objects.filter(annee=current_year).aggregate(Max('citations'))['citations__max']
+
+        # Vérifier si des publications ont été trouvées pour l'année actuelle
+        if max_citations:
+            # Filtrer les publications de l'année actuelle avec le nombre maximal de citations
+            publications = Publication.objects.filter(annee=current_year, citations=max_citations)
+
+            # Récupérer le titre de la première publication (la plus citée)
+            titre_publication = publications.first().titre_publication
+
+            # Récupérer tous les chercheurs associés à cette publication
+            chercheurs_associés = Chercheur.objects.filter(publication__titre_publication=titre_publication)
+
+            # Sérialiser les chercheurs associés avec leurs IDs
+            chercheurs_serializer = ChercheurNameSerializer(chercheurs_associés, many=True)
+
+            # Récupérer les IDs des chercheurs
+            chercheurs_ids = chercheurs_associés.values_list('id_chercheur', flat=True)
+
+            # Sérialiser la première publication avec les IDs des chercheurs associés
+            publication_max_citations_serializer = PublicationCiteSerializer(publications.first())
+            publication_data = publication_max_citations_serializer.data
+            publication_data['chercheurs'] = chercheurs_serializer.data
+            publication_data['chercheurs_ids'] = list(chercheurs_ids)
+
+            return Response(publication_data)
+        else:
+            return Response({'message': 'Aucune publication trouvée pour l\'année actuelle'}, status=status.HTTP_404_NOT_FOUND)
+
+class ChercheurListAPIView(generics.ListAPIView):
+    serializer_class = ChercheurSearchSerializer
+    queryset = Chercheur.objects.all()
+
+class PublicationssListAPIView(generics.ListAPIView):
+    serializer_class = PublicationSearchSerializer
+    queryset = Publication.objects.all()
+
+class EncadrementDetailsAPIView(RetrieveAPIView):
+    queryset = Encadrement.objects.all()
+    serializer_class = EncadrementSerializer
+    lookup_field = 'id_encadrement'
+
+class EncadrementssListAPIView(generics.ListAPIView):
+    queryset = Encadrement.objects.all()
+    serializer_class = EncadrementSearchSerializer
+class ProjetsListAPIView(generics.ListAPIView):
+    queryset = Projet.objects.all()
+    serializer_class = ProjetSearchSerializer
+
+
+
+class ProjetDetailsAPIView(RetrieveAPIView):
+    queryset = Projet.objects.all()
+    serializer_class = ProjetSerializer
+    lookup_field = 'id_projet'
+    
+class ChercheurprofileAPIView(RetrieveAPIView):
+   # permission_classes = [IsAuthenticated]
+    queryset = Chercheur.objects.all()
+    serializer_class = ChercheurProfileSerializer
+    lookup_field = 'id_chercheur'  # Champ à utiliser pour rechercher l'objet Chercheur
+
+
+class PublicationprofileAPIView(RetrieveAPIView):
+    #permission_classes = [IsAuthenticated]
+    queryset = Publication.objects.all()
+    serializer_class = PublicationCiteSerializer
+    lookup_field = 'id'
