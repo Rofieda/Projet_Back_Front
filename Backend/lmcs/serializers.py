@@ -223,7 +223,6 @@ class Conf_JournSerializerByChercheur(serializers.ModelSerializer):
 
 #----------------------- MERIEM --------------------------------------------
 
-        
 class ChercheurSearchSerializer(serializers.ModelSerializer):
     detail_url = serializers.SerializerMethodField()
     class Meta:
@@ -379,5 +378,6 @@ class ProjetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Projet
         fields = ['id_projet', 'titre_projet', 'chef_de_projet', 'domaine', 'annee_debut', 'annee_fin', 'chercheurs']
+
 
 
