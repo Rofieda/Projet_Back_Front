@@ -57,12 +57,12 @@ urlpatterns =[
     path('publicationprofile/<int:id>/', PublicationprofileAPIView.as_view(), name='publication-detail'),
     path('publicationprofile2/<int:id>/', Publicationprofil2eAPIView.as_view(), name='publication-detail'),
 
-     path('chercheurs/', ChercheurListAPIView.as_view(), name='chercheurs_list'),
+    path('chercheurs/', ChercheurListAPIView.as_view(), name='chercheurs_list'),
      path('publicationslist/', PublicationssListAPIView.as_view(), name='publication_list'),
-     path('encadrements/<int:id_encadrement>/',MEncadrementDetailAPIview.as_view(), name='encadrement-details'),
-     path('encadrements/', EncadrementssListAPIView.as_view(), name='encadrements-list'),
-     path('projetslists/', ProjetsListAPIView.as_view(), name='projets-list'),
-     path('projets/<int:id_projet>/', ProjetDetailsAPIView.as_view(), name='projet-details'),
+path('encadrements/<int:id_encadrement>/', EncadrementDetailsAPIView.as_view(), name='encadrement-details'),
+path('encadrements/', EncadrementssListAPIView.as_view(), name='encadrements-list'),
+path('projetslists/', ProjetsListAPIView.as_view(), name='projets-list'),
+path('projets/<int:id_projet>/', ProjetDetailsAPIView.as_view(), name='projet-details'),
      # Encadrement detail API endpoint
 
 ]
