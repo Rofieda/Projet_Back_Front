@@ -1020,7 +1020,10 @@ class ChercheurSearchAPIView(generics.ListAPIView):
 
         # Filter by établissement
         etablissement = self.request.GET.get('etablissement')
-        if etablissement:
+        if etablissement == 'Autre':
+            # Exclude specific etablissements
+            queryset = queryset.exclude(etablissement__in=['Esi', 'esi','USTHB','usthb'])
+        else:
             queryset = queryset.filter(etablissement=etablissement)
 
         # Filter by diplome
@@ -1217,7 +1220,11 @@ class EncadrementSearchAPIView(generics.ListAPIView):
         # Filtrer par type
         type_encadrement = self.request.GET.get('type_encadrement')
         if type_encadrement:
-            queryset = queryset.filter(type_encadrement=type_encadrement)
+            if type_encadrement == 'Autre':
+                # Exclure certains types
+                queryset = queryset.exclude(type_encadrement__in=['PFE', 'Master', 'Doctorat'])
+            else:
+                queryset = queryset.filter(type_encadrement=type_encadrement)
 
         # Filtrer par mot-clé
         mot_cle = self.request.GET.get('mot_cle')
