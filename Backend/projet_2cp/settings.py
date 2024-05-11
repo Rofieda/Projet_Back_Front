@@ -152,8 +152,9 @@ SIMPLE_JWT = {
 AUTH_USER_MODEL='accounts.User'
 
 
-EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
-EMAIL_HOST_USER = '24cbb2c5bbd7a7'
-EMAIL_HOST_PASSWORD = '809762b9cb9aa8'
-EMAIL_USE_TLS=True
-EMAIL_PORT = '2525' 
+EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 465
+EMAIL_HOST_USER = 'llmcsquest@gmail.com'
+EMAIL_HOST_PASSWORD = 'tllj heuf xzpx qbcf'
+EMAIL_USE_SSL = True
