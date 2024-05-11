@@ -2,6 +2,8 @@
 import json
 from dataclasses import field
 
+from django.core.mail import send_mail
+
 from lmcs.models import Chercheur
 from .models import User
 from rest_framework import serializers
@@ -127,7 +129,7 @@ class AddUserSerializer(serializers.ModelSerializer):
 '''
 
 
-class AddUserSerializer(serializers.ModelSerializer):
+class AddUserSerializer2(serializers.ModelSerializer):
     password = serializers.CharField(max_length=68, min_length=6, write_only=True)
     password2 = serializers.CharField(max_length=68, min_length=6, write_only=True)
     role = serializers.ChoiceField(choices=User.ROLE_CHOICES)
@@ -160,6 +162,61 @@ class AddUserSerializer(serializers.ModelSerializer):
         user.assign_role(role)
         return user
 
+class AddUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(max_length=68, min_length=6, write_only=True)
+    password2 = serializers.CharField(max_length=68, min_length=6, write_only=True)
+    role = serializers.ChoiceField(choices=User.ROLE_CHOICES)
+    is_staff = serializers.BooleanField(required=False)
+    is_superuser = serializers.BooleanField(required=False)
+    is_verified = serializers.BooleanField(required=False)
+    is_active = serializers.BooleanField(read_only=True, default=True)
+
+    class Meta:
+        model = User
+        fields = ['email', 'first_name', 'last_name', 'password', 'password2', 'role', 'is_staff', 'is_superuser', 'is_verified', 'is_active']
+
+    def validate(self, attrs):
+        password = attrs.get('password', '')
+        password2 = attrs.get('password2', '')
+        if password != password2:
+            raise serializers.ValidationError("Passwords do not match")
+
+        # Role validation
+        role = attrs.get('role')
+        if role not in dict(User.ROLE_CHOICES).keys():
+            raise serializers.ValidationError("Invalid role specified")
+
+        return attrs
+
+    def create(self, validated_data):
+        role = validated_data.pop('role')
+        password2 = validated_data.pop('password2')  # Remove password2 from validated_data
+        droit_acces = self.context['request'].data.get('droit_acces', None)
+
+        if droit_acces == 'ajouter' or droit_acces == 'ajouter_modifier':
+            is_staff = True
+        else:
+            is_staff = False
+
+            # Determine is_verified based on droit_acces value
+        if droit_acces == 'modifier' or droit_acces == 'ajouter_modifier':
+            is_verified = True
+        else:
+            is_verified = False
+
+        user = User.objects.create_user(
+            email=validated_data['email'],
+            first_name=validated_data.get('first_name'),
+            last_name=validated_data.get('last_name'),
+            password=validated_data.get('password'),
+            is_staff=is_staff,
+            is_superuser=False,  # Assuming newly created users are not superusers by default
+            is_verified=is_verified
+        )
+        user.assign_role(role)
+        return user
+
+
 '''
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -169,19 +226,30 @@ class UserSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     bloquer_url = serializers.SerializerMethodField()
     is_active_display = serializers.SerializerMethodField()
+    droit_acces = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'role', 'is_active_display', 'bloquer_url']
+        fields = ['id', 'email', 'first_name', 'last_name', 'role', 'is_active_display', 'bloquer_url', 'droit_acces']
 
     def get_bloquer_url(self, obj):
         return reverse('gestion-user', kwargs={'pk': obj.pk})
 
     def get_is_active_display(self, obj):
-        return "Actif" if obj.is_active else "Bloqué"
+        return "Actif" if obj.is_active else "Non_Actif"
+
+    def get_droit_acces(self, obj):
+        if obj.is_staff and obj.is_verified:
+            return "modifier_ajouter"
+        elif obj.is_staff:
+            return "ajouter"
+        elif obj.is_verified:
+            return "modifier"
+        else:
+            return ""
 
 
-class PasswordResetRequestSerializer(serializers.Serializer):
+class PasswordResetRequestSerializer2(serializers.Serializer):
     email = serializers.EmailField(max_length=255)
 
     class Meta:
@@ -208,7 +276,32 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
         return super().validate(attrs)
 
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=255)
 
+    class Meta:
+        fields = ['email']
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        if User.objects.filter(email=email).exists():
+            user = User.objects.get(email=email)
+            uidb64 = urlsafe_base64_encode(smart_bytes(user.pk))
+            token = PasswordResetTokenGenerator().make_token(user)
+            request = self.context.get('request')
+            current_site = get_current_site(request).domain
+            relative_link = reverse('reset-password-confirm', kwargs={'uidb64': uidb64, 'token': token})
+            abslink = f"http://{current_site}{relative_link}"
+            print(abslink)
+            email_body = f"Bonjour {user.first_name},\n\nNous vous avons envoyé un code de réinitialisation de mot de passe.\n\nCode de confirmation : {uidb64}\nCode d'autorisation : {token}\n\nCopiez ces codes et utilisez-les pour réinitialiser votre mot de passe."
+            data = {
+                'email_body': email_body,
+                'email_subject': "Réinitialiser votre mot de passe",
+                'to_email': user.email
+            }
+            send_normal_email(data)
+
+        return super().validate(attrs)
 class SetNewPasswordSerializer(serializers.Serializer):
     password=serializers.CharField(max_length=100, min_length=6, write_only=True)
     confirm_password=serializers.CharField(max_length=100, min_length=6, write_only=True)
@@ -236,7 +329,6 @@ class SetNewPasswordSerializer(serializers.Serializer):
             return user
         except Exception as e:
             return AuthenticationFailed("Le lien est invalide ou a expiré")
-
 class LogoutUserSerializer(serializers.Serializer):
     refresh_token = serializers.CharField()
 
