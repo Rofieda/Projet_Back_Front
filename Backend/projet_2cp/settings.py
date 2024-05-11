@@ -151,7 +151,7 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL='accounts.User'
 
-
+#pip install django-anymail
 EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 465
