@@ -5,7 +5,7 @@ from rest_framework.generics import GenericAPIView, CreateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied
-from django.core.mail import send_mail
+
 from rest_framework.generics import UpdateAPIView
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -23,7 +23,8 @@ from rest_framework.generics import DestroyAPIView
 from lmcs.models import Chercheur
 from .permissions import IsAdminUser
 from .serializers import UserSerializer, ChercheurSerializer
-
+from rest_framework.generics import RetrieveAPIView
+from django.core.mail import send_mail
 
 '''
 class RegisterView(GenericAPIView):
@@ -81,7 +82,7 @@ class RegisterView(GenericAPIView):
         subject = 'Bienvenue à LMCS'
         full_name = f"{user.first_name} {user.last_name}"  # Access attributes using dot notation
         message = f'Bonjour {full_name},\n\nVous avez été ajouté au labo LMCS avec succès.'
-        from_email = 'your_email@example.com'  # Set your sender email here
+        from_email = 'llmcsquest@gmail.com'  # Set your sender email here
         to_email = user.email  # Access email attribute using dot notation
         send_mail(subject, message, from_email, [to_email])
 
@@ -114,7 +115,6 @@ class LogoutAPIView(APIView):
 
 '''
 
-'''
 
 
 class AddUserView(CreateAPIView):
@@ -122,100 +122,43 @@ class AddUserView(CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
+        # Vérifie si l'utilisateur actuel est superutilisateur ou admin
         if not (self.request.user.is_superuser or self.request.user.role == 'admin'):
             raise PermissionDenied("Vous n'avez pas la permission d'effectuer cette action.")
+
         user = serializer.save()
 
-        # Envoyer un email à l'utilisateur ajouté
-        self.send_email_to_user(user)
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def send_email_to_user(self, user):
-        subject = 'Bienvenue à LMCS'
-        full_name = f"{user.first_name} {user.last_name}"  # Access attributes using dot notation
-        message = f'Bonjour {full_name},\n\nVous avez été ajouté à LMCSQUEST avec succès. Pour vous connecter, utilisez simplement cette adresse e-mail et utilisez les deux premières lettres de votre prénom comme mot de passe : LMCS_lesdeuxpremiereslettredevotreprenomenminiscule.'
-        from_email = 'your_email@example.com'  # Set your sender email here
-        to_email = user.email  # Access email attribute using dot notation
-        send_mail(subject, message, from_email, [to_email])
-'''
-class AddUserView2(CreateAPIView):
-    serializer_class = AddUserSerializer
-    permission_classes = [IsAuthenticated]
-
-    def perform_create(self, serializer):
-        if not (self.request.user.is_superuser or self.request.user.role == 'admin'):
-            raise PermissionDenied("Vous n'avez pas la permission d'effectuer cette action.")
-        user = serializer.save()
-
-        # Associate the registered user with the Chercheur model if chercheur_id is provided
-        chercheur_id = self.request.data.get('chercheur')
-        if chercheur_id:
-            chercheur = Chercheur.objects.get(pk=chercheur_id)
-            user.chercheur = chercheur
-            user.save()
-
-        # Send email notification
-        self.send_email_to_user(user)
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def send_email_to_user(self, user):
-        subject = 'Bienvenue à LMCS'
-        full_name = f"{user.first_name} {user.last_name}"  # Access attributes using dot notation
-        message = f'Bonjour {full_name},\n\nVous avez été ajouté à LMCSQUEST avec succès. Pour vous connecter, utilisez simplement cette adresse e-mail et utilisez les deux premières lettres de votre prénom comme mot de passe : LMCS_lesdeuxpremiereslettredevotreprenomenminiscule.'
-        from_email = 'your_email@example.com'  # Set your sender email here
-        to_email = user.email  # Access email attribute using dot notation
-        send_mail(subject, message, from_email, [to_email])
-class AddUserView(CreateAPIView):
-    serializer_class = AddUserSerializer
-    permission_classes = [IsAuthenticated]
-
-    def perform_create(self, serializer):
-        user = serializer.save()
-
-        # Vérifier si l'utilisateur ajouté a le rôle "chercheur"
+        # Logique supplémentaire basée sur le rôle de l'utilisateur
         if user.role == 'chercheur':
             try:
-                # Rechercher le chercheur correspondant dans la table Chercheur
+                # Recherche du Chercheur correspondant à l'e-mail de l'utilisateur
                 chercheur = Chercheur.objects.get(email=user.email)
-                user.chercheur_id = chercheur.id_chercheur  # Assigner l'ID du chercheur à chercheur_id dans le modèle User
+                user.chercheur_id = chercheur.id_chercheur
+                user.save()  # Sauvegarde de l'ID du chercheur dans l'utilisateur
             except ObjectDoesNotExist:
-                pass
-
-        # Vérifier si l'utilisateur ajouté a le rôle "admin"
-        if user.role == 'admin':
+                pass  # Gérer le cas où aucun chercheur correspondant n'est trouvé
+        elif user.role == 'admin':
             user.is_superuser = True
+            user.save()
 
-        user.save()
-
-        # Envoyer un email à l'utilisateur ajouté
+        # Envoi d'un e-mail à l'utilisateur
         self.send_email_to_user(user)
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    # Méthode pour envoyer un e-mail à l'utilisateur
     def send_email_to_user(self, user):
         subject = 'Bienvenue à LMCS'
         full_name = f"{user.first_name} {user.last_name}"
-        message = f'Bonjour {full_name},\n\nVous avez été ajouté à LMCSQUEST avec succès. Pour vous connecter, utilisez simplement cette adresse e-mail et utilisez les deux premières lettres de votre prénom comme mot de passe : LMCS_lesdeuxpremiereslettredevotreprenomenminiscule.'
-        from_email = 'your_email@example.com'
+        message = f'Bonjour {full_name},\n\nVous avez été ajouté à LMCSQUEST avec succès. Pour vous connecter, utilisez simplement cette adresse e-mail et utilisez les deux premières lettres de votre prénom comme mot de passe : LMCS_2024_lesdeuxpremiereslettredevotreprenomenminiscule.'
+        from_email = 'llmcsquest@gmail.com'
         to_email = user.email
         send_mail(subject, message, from_email, [to_email])
 
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 class ListUsersView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -231,26 +174,7 @@ class ListUsersView(APIView):
             return Response({"detail": "Vous n'avez pas la permission d'effectuer cette action."}, status=403)
 
 
-'''
-class DeleteUserView(DestroyAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
 
-    def delete(self, request, *args, **kwargs):
-        try:
-            user = self.get_object()
-            # Check if the user sending the request is a superuser or has an admin role
-            if request.user.is_superuser or (request.user.role == 'admin' and request.user != user):
-                user.delete()
-                return Response({"detail": "L'utilisateur a été supprimé avec succès."}, status=status.HTTP_204_NO_CONTENT)
-            else:
-                return Response({"detail": "Vous n'avez pas la permission de supprimer cet utilisateur."},
-                                status=status.HTTP_403_FORBIDDEN)
-        except User.DoesNotExist:
-            return Response({"detail": "Utilisateur non trouvé."}, status=status.HTTP_404_NOT_FOUND)
-
-'''
 class DeleteUserView(DestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer  # Only for response serialization
@@ -402,9 +326,9 @@ class GestionUserView1(UpdateAPIView):
                 if user.role == 'chercheur':
                     chercheur = user.chercheur
                     if not user.is_active:
-                        chercheur.statut = 'Bloqué'
+                        chercheur.statut = 'Non_active'
                     else:
-                        chercheur.statut = 'activé'
+                        chercheur.statut = 'Active'
                     chercheur.save()
 
                 # Récupérer les données mises à jour de l'utilisateur
@@ -434,12 +358,12 @@ class GestionUserView(UpdateAPIView):
                 user.save()
 
                 # Mettre à jour le statut du chercheur si nécessaire
-                if user.role == 'chercheur':
+                if user.role == 'chercheur' and user.chercheur is not None:
                     chercheur = user.chercheur
                     if not user.is_active:
-                        chercheur.statut = 'Bloqué'
+                        chercheur.statut = 'Non_Actif'
                     else:
-                        chercheur.statut = 'activé'
+                        chercheur.statut = 'Actif'
                     chercheur.save()
 
                 # Récupérer les données mises à jour de l'utilisateur
@@ -458,3 +382,9 @@ class GestionUserView(UpdateAPIView):
                                 status=status.HTTP_403_FORBIDDEN)
         except User.DoesNotExist:
             return Response({"detail": "Utilisateur non trouvé."}, status=status.HTTP_404_NOT_FOUND)
+
+
+class UserProfileAPIView(RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    lookup_field = 'id'
