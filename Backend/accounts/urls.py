@@ -2,7 +2,7 @@ from unicodedata import name
 from django.urls import path
 from .views import RegisterView, LoginUserView, LogoutAPIView, AddUserView, ListUsersView, DeleteUserView, \
     PasswordResetRequestView, PasswordResetConfirm, SetNewPasswordView, BloqueruserView, DebloqueruserView, \
-    GestionUserView
+    GestionUserView, UserProfileAPIView
 
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -20,4 +20,5 @@ urlpatterns = [
     path('bloqueuser/<int:pk>/', BloqueruserView.as_view(), name='bloquer-user'),
     path('débloqueuser/<int:pk>/', DebloqueruserView.as_view(), name='bloquer-user'),
     path('gestion-user/<int:pk>/', GestionUserView.as_view(), name='gestion-user'),
+    path('user/<int:id>/', UserProfileAPIView.as_view(), name='user_profile'),
     ]
