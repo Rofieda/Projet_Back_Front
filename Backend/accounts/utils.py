@@ -5,6 +5,7 @@ from django.contrib.sites.shortcuts import get_current_site
 
 
 def send_normal_email(data):
+    #fonction pour gérer l'envoie des emails lors l'ajout des utilisateurs
     email = EmailMessage(
         subject=data['email_subject'],
         body=data['email_body'],
