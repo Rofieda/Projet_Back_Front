@@ -1,355 +1,258 @@
 
-import json
-from dataclasses import field
+<!DOCTYPE html>
+<html lang="fr">
 
-from django.core.mail import send_mail
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width , initial-scale=1.0">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" href="../styles/BARS.css">
+    <link rel="stylesheet" href="../styles/ajout.css">
+    <script src="../javascript/BARS.js"></script>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap">
+    <title>Voir Encadrement</title>
+</head>
 
-from lmcs.models import Chercheur
-from .models import User
-from rest_framework import serializers
-from string import ascii_lowercase, ascii_uppercase
-from django.contrib.auth import authenticate
-from rest_framework.exceptions import AuthenticationFailed
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.utils.encoding import smart_str, force_str, smart_bytes
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from django.contrib.sites.shortcuts import get_current_site
-from django.urls import reverse
-from rest_framework_simplejwt.tokens import UntypedToken
-from .utils import send_normal_email
-from rest_framework_simplejwt.tokens import RefreshToken, TokenError
-from django.contrib.auth import get_user_model
-from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.utils import timezone
-from rest_framework.exceptions import ValidationError
+<body>
+    <nav>
+        <div class="sidebar">
+            <div class="logo-container">
 
+                <span>
+                    <img src="../images/FINALWHITE.png" alt="logo" class="logo-image">
+                </span>
+                <span class="bars-icon">
+                    <img src="../images/Company PProfile.png" class='logo-icon'>
+                </span>
+            </div>
 
+            <ul class="nav-links">
+                <button class="button-links" id="button-link">
+                    <li class="links">
+                        <a class="link_other" href="../html/accueil.html">
+                            <img src="../images/Vector.png" class='icon'>
+                            <span class="link_name">Acceuil</span>
+                        </a>
+                    </li>
+                </button>
+                <button class="button-links">
+                    <li class="links">
+                        <a class="link_other" href="#">
+                            <img src="../images/Search.png" class='icon'>
+                            <span class="link_name"> Recherche</span>
+                            <i class="fa-solid fa-angle-down" id="toggleSubMenu"></i>
+                        </a>
+                        <div class="sub_sub_menu">
 
+                            <ul class="sub_menu">
+                                <li class="sous-choice"> <i class="fa-solid fa-caret-right"></i><a class="liste_am"
+                                        href="../html/chercheurs.html"> Chercheurs</a></li>
+                                <li class="sous-choice"><i class="fa-solid fa-caret-right"></i><a class="liste_am"
+                                        href="../html/publication.html">Publications</a></li>
+                                <li class="sous-choice"><i class="fa-solid fa-caret-right"></i><a class="liste_am"
+                                        href="../html/chercheurs.html">Encadrements </a></li>
+                                <li class="sous-choice"><i class="fa-solid fa-caret-right"></i><a class="liste_am"
+                                        href="../html/chercheurs.html">Projets</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                </button>
 
-User = get_user_model()
+                <button class="button-links">
+                    <li class="links">
+                        <a class="link_other" href="#">
+                            <img src="../images/news.png" class='icon'>
+                            <span class="link_name"> Publications </span>
+                            <i class="fa-solid fa-angle-down" id="toggleSubMenuu"></i>
+                        </a>
+                        <div class="sub_sub_menu">
+                            <ul class="sub_menu">
+                                <li class="sous-choice2"> <i class="fa-solid fa-caret-right"></i><a class="liste2"
+                                        href="../html/Ajtpubcher.html">Ajouter une
+                                        publication</a>
+                                </li>
+                                <li class="sous-choice2"> <i class="fa-solid fa-caret-right"></i><a class="liste2"
+                                        href="../html/Ajtconf-revue.html">Ajouter une
+                                        conf-journal</a>
+                                </li>
+                                <li class="sous-choice2"><i class="fa-solid fa-caret-right"></i><a class="liste2"
+                                        href="../html/listedepublication.html">Liste des publications</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </button>
+                <button class="button-links">
+                    <li class="links">
+                        <a class="link_other" href="#">
 
-class UserRegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(max_length=68, min_length=6, write_only=True)
-    password2 = serializers.CharField(max_length=68, min_length=6, write_only=True)
-    role = serializers.ChoiceField(choices=User.ROLE_CHOICES)
+                            <img src="../images/encadrement.png" class='icon'>
+                            <span class="link_name"> Encadrements</span>
+                            <i class="fa-solid fa-angle-down" id="toggleSubMenuuu"></i>
+                        </a>
+                        <div class="sub_sub_menu">
+                            <ul class="sub_menu">
+                                <li class="sous-choice2"> <i class="fa-solid fa-caret-right"></i><a class="liste2"
+                                        href="../html/Ajtencadrementcher.html">Ajouter un Encadrement</a>
+                                </li>
+                                <li class="sous-choice2"><i class="fa-solid fa-caret-right"></i><a class="liste2"
+                                        href="../html/listedeencadrement.html">Liste des Encadrements</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </button>
+                <button class="button-links">
+                    <li class="links">
+                        <a class="link_other" href="#">
+                            <img src="../images/list.png" class='icon'>
+                            <span class="link_name"> Projets </span>
+                            <i class="fa-solid fa-angle-down" id="toggleSubMenuuuu"></i>
+                        </a>
+                        <div class="sub_sub_menu">
+                            <ul class="sub_menu">
+                                <li class="sous-choice"><i class="fa-solid fa-caret-right"></i><a class="liste2"
+                                        href="../html/Ajtprojetcher.html"> Ajouter un
+                                        Projet </a></li>
+                                <li class="sous-choice"><i class="fa-solid fa-caret-right"></i><a class="liste2"
+                                        href="../html/listedeprojet.html">Liste des Projets</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                </button>
+                <button class="button-links">
+                    <li class="links">
+                        <a class="link_other" href="../html/statistiques.html">
+                            <img src="../images/Icons.png" class='icon'>
+                            <span class="link_name"> statistique </span>
+                        </a>
+                    </li>
+                </button>
 
-    class Meta:
-        model = User
-        fields = ['email', 'first_name', 'last_name', 'password', 'password2', 'role']
+                <button class="button-links">
+                    <li class="links">
+                        <a class="link_other" href="#">
+                            <img src="../images/Historique.png" class='icon'>
+                            <span class="link_name"> Historique </span>
+                        </a>
+                    </li>
+                </button>
+                <button class="button-links">
 
-    def validate(self, attrs):
-        password = attrs.get('password', '')
-        password2 = attrs.get('password2', '')
-        if password != password2:
-            raise serializers.ValidationError("Passwords do not match")
+                    <li class="links">
+                        <a class="link_other" href="#">
+                            <img src="../images/Logout.png" class='icon'>
+                            <span class="link_name "> Déconnecter </span>
+                        </a>
+                    </li>
+            </ul>
+            </button>
+        </div>
+    </nav>
+    <div class="top-bar-right">
+        <div class="aide">
+            <button><img src="../images/help.png" alt="aide"></button>
+        </div>
+        <div class="settings">
+            <button><img src="../images/paramerte.png" alt="Paramètres"></button>
+        </div>
+        <div class="notification">
+            <button>
+                <img src="../images/notification.png" alt="Notifications">
+            </button>
+        </div>
+        <div class="profile">
+            <img src="../images/Profile.png" alt="Profil">
+        </div>
+    </div>
 
-        # Role validation
-        role = attrs.get('role')
-        if role not in dict(User.ROLE_CHOICES).keys():
-            raise serializers.ValidationError("Invalid role specified")
+    <button class="left-button" onclick="goBack()"><img src="../images/Left1.png"></button>
 
-        return attrs
+    <div class="pub">
+        <div class="pub-title">
+            <p>Encadrement</p>
+        </div>
+        <div class="pub-content">
+            <div class="pub-container" id="originalInfo">
+                <div class="left-pub-info">
+                    <p>Titre :</p>
+                    <p>Type :</p>
+                    <p>Date de debut d’encadrement :</p>
+                    <p>Date de fin d’encadrement :</p>
+                    <p>Etudiant1:</p>
+                    <p>Etudiant2:</p>
+                    <p>chercheur 1:</p>
+                    <p>Role chercheur 1 :</p>
+                    <p>chercheur 2:</p>
+                    <p>Role chercheur 2 :</p>
+                </div>
+                <div class="right-pub-info">
+                    <p id="intitule">l’intellegence artificielle</p>
+<p id="type">PFE</p>
+<p id="annee_debut">2019</p>
+<p id="annee_fin">2021</p>
+<p id="nom_etudiant1">Medabis</p>
+<p id="nom_etudiant2">Amina</p>
+<p id="chercheur1">Medabis Amina</p>
+<p id="role_chercheur1">encadreur</p>
+<p id="chercheur2">---</p>
+<p id="role_chercheur2">---</p>
+                </div>
+            </div>
+        </div>
 
-    def create(self, validated_data):
-        role = validated_data.pop('role')
-        user = User.objects.create_user(
-            email=validated_data['email'],
-            first_name=validated_data.get('first_name'),
-            last_name=validated_data.get('last_name'),
-            password=validated_data.get('password')
-        )
-        user.assign_role(role)
-        return user
+    </div>
+    <script src=" https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="../javascript/ajout.js"></script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Récupérer l'ID de l'encadrement de la session
+    const encadrementId = sessionStorage.getItem('id_encadrement');
 
-class LoginSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(max_length=155, min_length=6)
-    password = serializers.CharField(max_length=68, write_only=True)
-    full_name = serializers.CharField(max_length=255, read_only=True)
-    access_token = serializers.CharField(max_length=255, read_only=True)
-    refresh_token = serializers.CharField(max_length=255, read_only=True)
-    role = serializers.CharField(max_length=20, read_only=True)
-    id = serializers.IntegerField(read_only=True)  # Add id field
-    chercheur_id = serializers.IntegerField(read_only=True)
-    class Meta:
-        model = User
-        fields = ['email', 'password', 'full_name', 'access_token', 'refresh_token' , 'role','id', 'chercheur_id']
+    // Faire une requête AJAX pour récupérer les détails de l'encadrement
+    fetch(`http://127.0.0.1:8000/api/encadrements/${encadrementId}/`)
+        .then(response => response.json())
+        .then(data => {
+            // Mettre à jour les éléments HTML avec les données récupérées
+            document.getElementById('intitule').textContent = data.intitule;
+            document.getElementById('type').textContent = data.type_encadrement;
+            document.getElementById('annee_debut').textContent = data.annee_debut;
+            document.getElementById('annee_fin').textContent = data.annee_fin;
+            document.getElementById('nom_etudiant1').textContent = data.nom_prenom_etd1;
+            document.getElementById('nom_etudiant2').textContent = data.nom_prenom_etd2;
 
-    def validate(self, attrs):
-        email = attrs.get('email')
-        password = attrs.get('password')
-        request = self.context.get('request')
-        user = authenticate(request, email=email, password=password)
-        if not user:
-            raise AuthenticationFailed("Invalid credentials. Please try again.")
+            // Vérifier si des chercheurs sont disponibles
+            if (data.chercheurs.length > 0) {
+                // Mettre à jour les données pour le premier chercheur
+                document.getElementById('chercheur1').textContent = `${data.chercheurs[0].nom_chercheur} ${data.chercheurs[0].prenom_chercheur}`;
+                document.getElementById('role_chercheur1').textContent = data.role_chercheur;
 
-        user.last_login = timezone.now()
-        user.save(update_fields=['last_login'])
-
-        tokens = user.tokens()
-        id = user.id
-        chercheur_id = user.chercheur_id
-        return {
-            'email': user.email,
-            'role': user.role,
-            'full_name': user.get_full_name,  # Corrected usage
-            "access_token": str(tokens.get('access')),
-            "refresh_token": str(tokens.get('refresh')),
-            'id': id,
-            'chercheur_id': chercheur_id
-        }
-
-
-'''
-class AddUserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(max_length=68, min_length=6, write_only=True)
-    password2 = serializers.CharField(max_length=68, min_length=6, write_only=True)
-    role = serializers.ChoiceField(choices=User.ROLE_CHOICES)
-
-    class Meta:
-        model = User
-        fields = ['email', 'first_name', 'last_name', 'password', 'password2', 'role']
-
-    def validate(self, attrs):
-        password = attrs.get('password', '')
-        password2 = attrs.get('password2', '')
-        if password != password2:
-            raise serializers.ValidationError("Passwords do not match")
-        return attrs
-
-    def create(self, validated_data):
-        role = validated_data.pop('role')
-        user = User.objects.create_user(
-            email=validated_data['email'],
-            first_name=validated_data.get('first_name'),
-            last_name=validated_data.get('last_name'),
-            password=validated_data.get('password')
-        )
-        user.assign_role(role)
-        return user
-'''
-
-
-class AddUserSerializer2(serializers.ModelSerializer):
-    password = serializers.CharField(max_length=68, min_length=6, write_only=True)
-    password2 = serializers.CharField(max_length=68, min_length=6, write_only=True)
-    role = serializers.ChoiceField(choices=User.ROLE_CHOICES)
-
-    class Meta:
-        model = User
-        fields = ['email', 'first_name', 'last_name', 'password', 'password2', 'role']
-
-    def validate(self, attrs):
-        password = attrs.get('password', '')
-        password2 = attrs.get('password2', '')
-        if password != password2:
-            raise serializers.ValidationError("Passwords do not match")
-
-        # Role validation
-        role = attrs.get('role')
-        if role not in dict(User.ROLE_CHOICES).keys():
-            raise serializers.ValidationError("Invalid role specified")
-
-        return attrs
-
-    def create(self, validated_data):
-        role = validated_data.pop('role')
-        user = User.objects.create_user(
-            email=validated_data['email'],
-            first_name=validated_data.get('first_name'),
-            last_name=validated_data.get('last_name'),
-            password=validated_data.get('password')
-        )
-        user.assign_role(role)
-        return user
-
-class AddUserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(max_length=68, min_length=6, write_only=True)
-    password2 = serializers.CharField(max_length=68, min_length=6, write_only=True)
-    role = serializers.ChoiceField(choices=User.ROLE_CHOICES)
-    is_staff = serializers.BooleanField(required=False)
-    is_superuser = serializers.BooleanField(required=False)
-    is_verified = serializers.BooleanField(required=False)
-    is_active = serializers.BooleanField(read_only=True, default=True)
-
-    class Meta:
-        model = User
-        fields = ['email', 'first_name', 'last_name', 'password', 'password2', 'role', 'is_staff', 'is_superuser', 'is_verified', 'is_active']
-
-    def validate(self, attrs):
-        password = attrs.get('password', '')
-        password2 = attrs.get('password2', '')
-        if password != password2:
-            raise serializers.ValidationError("Passwords do not match")
-
-        # Role validation
-        role = attrs.get('role')
-        if role not in dict(User.ROLE_CHOICES).keys():
-            raise serializers.ValidationError("Invalid role specified")
-
-        return attrs
-
-    def create(self, validated_data):
-        role = validated_data.pop('role')
-        password2 = validated_data.pop('password2')  # Remove password2 from validated_data
-        droit_acces = self.context['request'].data.get('droit_acces', None)
-
-        if droit_acces == 'ajouter' or droit_acces == 'ajouter_modifier':
-            is_staff = True
-        else:
-            is_staff = False
-
-            # Determine is_verified based on droit_acces value
-        if droit_acces == 'modifier' or droit_acces == 'ajouter_modifier':
-            is_verified = True
-        else:
-            is_verified = False
-
-        user = User.objects.create_user(
-            email=validated_data['email'],
-            first_name=validated_data.get('first_name'),
-            last_name=validated_data.get('last_name'),
-            password=validated_data.get('password'),
-            is_staff=is_staff,
-            is_superuser=False,  # Assuming newly created users are not superusers by default
-            is_verified=is_verified
-        )
-        user.assign_role(role)
-        return user
-
-
-'''
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'role']
-'''
-class UserSerializer(serializers.HyperlinkedModelSerializer):
-    bloquer_url = serializers.SerializerMethodField()
-    is_active_display = serializers.SerializerMethodField()
-    droit_acces = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'role', 'is_active_display', 'bloquer_url', 'droit_acces']
-
-    def get_bloquer_url(self, obj):
-        return reverse('gestion-user', kwargs={'pk': obj.pk})
-
-    def get_is_active_display(self, obj):
-        return "Actif" if obj.is_active else "Non_Actif"
-
-    def get_droit_acces(self, obj):
-        if obj.is_staff and obj.is_verified:
-            return "modifier_ajouter"
-        elif obj.is_staff:
-            return "ajouter"
-        elif obj.is_verified:
-            return "modifier"
-        else:
-            return ""
-
-
-class PasswordResetRequestSerializer2(serializers.Serializer):
-    email = serializers.EmailField(max_length=255)
-
-    class Meta:
-        fields = ['email']
-
-    def validate(self, attrs):
-        email = attrs.get('email')
-        if User.objects.filter(email=email).exists():
-            user = User.objects.get(email=email)
-            uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
-            token = PasswordResetTokenGenerator().make_token(user)
-            request = self.context.get('request')
-            current_site = get_current_site(request).domain
-            relative_link = reverse('reset-password-confirm', kwargs={'uidb64': uidb64, 'token': token})
-            abslink = f"http://{current_site}{relative_link}"
-            print(abslink)
-            email_body = f"Hi {user.first_name} Nous vous avons envoyé les codes pour réinitialiser votre mot de passe sous forme http://127.0.0.1:8000/api/v1/auth/password-reset-confirm/<code de confirmation>/<code de autorisation>/   copie code de confirmation et code de confirmation pour se identifier et confirmer la rénisialisation de mot de passe   {abslink}"
-            data = {
-                'email_body': email_body,
-                'email_subject': "Réinitialiser votre mot de passe",
-                'to_email': user.email
+                // Vérifier s'il y a un deuxième chercheur
+                if (data.chercheurs.length > 1) {
+                    // Mettre à jour les données pour le deuxième chercheur
+                    document.getElementById('chercheur2').textContent = `${data.chercheurs[1].nom_chercheur} ${data.chercheurs[1].prenom_chercheur}`;
+                    document.getElementById('role_chercheur2').textContent = data.role_chercheur2;
+                } else {
+                    // Aucun deuxième chercheur trouvé, afficher un message par défaut
+                    document.getElementById('chercheur2').textContent = '---';
+                    document.getElementById('role_chercheur2').textContent = '---';
+                }
+            } else {
+                // Aucun chercheur trouvé, afficher un message par défaut
+                document.getElementById('chercheur1').textContent = '---';
+                document.getElementById('role_chercheur1').textContent = '---';
+                document.getElementById('chercheur2').textContent = '---';
+                document.getElementById('role_chercheur2').textContent = '---';
             }
-            send_normal_email(data)
+        })
+        .catch(error => console.error('Une erreur s\'est produite : ', error));
+});
+</script>
 
-        return super().validate(attrs)
+</body>
 
-class PasswordResetRequestSerializer(serializers.Serializer):
-    email = serializers.EmailField(max_length=255)
-
-    class Meta:
-        fields = ['email']
-
-    def validate(self, attrs):
-        email = attrs.get('email')
-        if User.objects.filter(email=email).exists():
-            user = User.objects.get(email=email)
-            uidb64 = urlsafe_base64_encode(smart_bytes(user.pk))
-            token = PasswordResetTokenGenerator().make_token(user)
-            request = self.context.get('request')
-            current_site = get_current_site(request).domain
-            relative_link = reverse('reset-password-confirm', kwargs={'uidb64': uidb64, 'token': token})
-            abslink = f"http://{current_site}{relative_link}"
-            print(abslink)
-            email_body = f"Bonjour {user.first_name},\n\nNous vous avons envoyé un code de réinitialisation de mot de passe.\n\nCode de confirmation : {uidb64}\nCode d'autorisation : {token}\n\nCopiez ces codes et utilisez-les pour réinitialiser votre mot de passe."
-            data = {
-                'email_body': email_body,
-                'email_subject': "Réinitialiser votre mot de passe",
-                'to_email': user.email
-            }
-            send_normal_email(data)
-
-        return super().validate(attrs)
-class SetNewPasswordSerializer(serializers.Serializer):
-    password=serializers.CharField(max_length=100, min_length=6, write_only=True)
-    confirm_password=serializers.CharField(max_length=100, min_length=6, write_only=True)
-    uidb64=serializers.CharField(min_length=1, write_only=True)
-    token=serializers.CharField(min_length=3, write_only=True)
-
-    class Meta:
-        fields = ['password', 'confirm_password', 'uidb64', 'token']
-
-    def validate(self, attrs):
-        try:
-            token=attrs.get('token')
-            uidb64=attrs.get('uidb64')
-            password=attrs.get('password')
-            confirm_password=attrs.get('confirm_password')
-
-            user_id=force_str(urlsafe_base64_decode(uidb64))
-            user=User.objects.get(id=user_id)
-            if not PasswordResetTokenGenerator().check_token(user, token):
-                raise AuthenticationFailed("Le lien de réinitialisation est invalide ou a expiré", 401)
-            if password != confirm_password:
-                raise AuthenticationFailed("Les mots de passe ne correspondent pas")
-            user.set_password(password)
-            user.save()
-            return user
-        except Exception as e:
-            return AuthenticationFailed("Le lien est invalide ou a expiré")
-class LogoutUserSerializer(serializers.Serializer):
-    refresh_token = serializers.CharField()
-
-    error_messages = {
-        'bad_token': 'Token is expired or invalid'
-    }
-
-    def validate(self, attrs):
-        self.token = attrs.get('refresh_token')
-        return attrs
-
-    def save(self, **kwargs):
-        try:
-            token = RefreshToken(self.token)
-            token.blacklist()
-            return "Déconnexion réussie."  # Success message
-        except TokenError:
-            raise ValidationError(self.error_messages['bad_token'])
-
-
-class ChercheurSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Chercheur
-        fields = '__all__'
+</html>
